@@ -30,7 +30,7 @@ const routes = [
       component: AdminLogin,
       beforeEnter: (
         to: RouteLocationNormalized, 
-        from: RouteLocationNormalized, 
+        _from: RouteLocationNormalized, 
         next: NavigationGuardNext
       ) => {
         const secretKey = 'my-secret-key'
