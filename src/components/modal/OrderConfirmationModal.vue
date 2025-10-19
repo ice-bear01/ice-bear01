@@ -20,12 +20,35 @@ watch(
   }
 )
 
+// ✅ Real-time quantity validation
+watch(quantity, (val) => {
+  const stock = orderStore.selectedProduct?.product_stock || 1
+  if (val < 1) quantity.value = 1
+  if (val > stock) quantity.value = stock
+})
+
 const confirmOrder = async () => {
   if (!orderStore.selectedProduct) return
 
   errorMessage.value = ''
   successMessage.value = ''
   loading.value = true
+
+  const stock = orderStore.selectedProduct.product_stock
+
+  // ✅ Validation before sending
+  if (quantity.value < 1) {
+    errorMessage.value = 'Quantity must be at least 1.'
+    loading.value = false
+    return
+  }
+
+  if (quantity.value > stock) {
+    errorMessage.value = `You can only order up to ${stock} item(s).`
+    quantity.value = stock
+    loading.value = false
+    return
+  }
 
   const payload = {
     product_id: orderStore.selectedProduct.product_id,
