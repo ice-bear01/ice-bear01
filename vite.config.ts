@@ -6,11 +6,15 @@ import path from 'path'
 export default defineConfig({
   plugins: [
     vue(),
-    tailwindcss()
+    tailwindcss(),
   ],
-  resolve:{
-    alias:{
+  resolve: {
+    alias: {
       '@': path.resolve(__dirname, 'src'),
-    }
-  }
+    },
+  },
+  base: '/', 
+  build: {
+    outDir: 'dist',
+  },
 })
