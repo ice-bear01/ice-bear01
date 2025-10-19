@@ -4,6 +4,8 @@ import axios from 'axios'
 import { ref } from 'vue'
 import { useLoadingStore } from '@/store/loading'
 
+const backend = import.meta.env.VITE_BACKEND_URL
+
 const loading = useLoadingStore()
 
 const email = ref<string>('')
@@ -19,7 +21,7 @@ const toLogin = async () => {
   try {
     loading.show()
     const login = await axios.post(
-      'http://localhost:8000/users/auth/login',
+      `${backend}/users/auth/login`,
       { email: email.value, password: password.value },
       { withCredentials: true }
     )
@@ -39,7 +41,7 @@ const sendForgotCode = async () => {
   try {
     loading.show()
     sendingCode.value = true
-    const res = await axios.post('http://localhost:8000/auth/send-code', {
+    const res = await axios.post(`${backend}/auth/send-code`, {
       email: forgotEmail.value,
     })
     if (res) {
@@ -57,7 +59,7 @@ const sendForgotCode = async () => {
 const verifyForgotCode = async () => {
   try {
     loading.show()
-    const verify = await axios.post('http://localhost:8000/auth/verify-code', {
+    const verify = await axios.post(`${backend}/auth/verify-code`, {
       email: forgotEmail.value,
       code: verificationCode.value,
     })

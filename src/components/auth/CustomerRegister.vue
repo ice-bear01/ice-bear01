@@ -4,6 +4,8 @@ import axios from 'axios'
 import router from '@/router'
 import { useLoadingStore } from '@/store/loading'
 
+const backend = import.meta.env.VITE_BACKEND_URL
+
 const loading = useLoadingStore()
 
 // --------------------
@@ -52,7 +54,7 @@ const sendCode = async () => {
     loading.show()
     sendingCode.value = true
 
-    await axios.post('http://localhost:8000/auth/send-code', {
+    await axios.post(`${backend}/auth/send-code`, {
       email: email.value,
       purpose: 'register',
     })
@@ -86,14 +88,14 @@ const verifyCode = async () => {
     loading.show()
     verifyingCode.value = true
 
-    const verify = await axios.post('http://localhost:8000/auth/verify-code', {
+    const verify = await axios.post(`${backend}/auth/verify-code`, {
       email: email.value,
       code: verificationCode.value,
     })
 
     if (verify) {
       await axios.post(
-        'http://localhost:8000/users/auth/sign-up',
+        `${backend}/users/auth/sign-up`,
         { email: email.value, password: password.value },
         { withCredentials: true }
       )

@@ -9,7 +9,7 @@ const route = useRoute();
 const router = useRouter();
 const isEditing = ref(false);
 const productId = ref(null);
-
+const backend = import.meta.env.VITE_BACKEND_URL
 // Product structure aligned with backend
 const product = ref({
   category: "",
@@ -32,7 +32,7 @@ onMounted(async () => {
   if (route.params.id) {
     isEditing.value = true;
     productId.value = route.params.id;
-    const { data } = await axios.get(`http://localhost:8000/product/${productId.value}`);
+    const { data } = await axios.get(`${backend}/product/${productId.value}`);
 
     // Map backend response to local model
     product.value = {
@@ -174,10 +174,10 @@ const saveProduct = async () => {
     // ------------------------
     if (isEditing.value) {
       loading.show();
-      await axios.put(`http://localhost:8000/product/update/${productId.value}`, payload);
+      await axios.put(`${backend}/product/update/${productId.value}`, payload);
     } else {
       loading.show();
-      await axios.post("http://localhost:8000/product/add-product", payload);
+      await axios.post(`${backend}/product/add-product`, payload);
     }
     loading.hide();
     alert("Product saved successfully!");

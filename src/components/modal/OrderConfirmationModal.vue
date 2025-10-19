@@ -2,6 +2,8 @@
 import { ref, watch } from 'vue'
 import { useOrderStore } from '@/store/order'
 
+const backend = import.meta.env.VITE_BACKEND_URL
+
 const orderStore = useOrderStore()
 const quantity = ref(1)
 const loading = ref(false)
@@ -31,7 +33,7 @@ const confirmOrder = async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:8000/orders/add-order', {
+    const response = await fetch(`${backend}/orders/add-order`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

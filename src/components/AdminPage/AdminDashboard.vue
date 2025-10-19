@@ -6,7 +6,7 @@ import { ref, onMounted } from "vue";
 
 const route = useRoute();
 const router = useRouter();
-
+const backend = import.meta.env.VITE_BACKEND_URL
 const navItems = [
   { name: "Dashboard", path: "/admin/dashboard" },
   { name: "Product Management", path: "/admin/product-management" },
@@ -24,7 +24,7 @@ const goTo = (path: string) => {
 const logout = async () => {
   try {
     await axios.post(
-      "http://localhost:8000/users/auth/admin/logout",
+      `${backend}/users/auth/admin/logout`,
       {},
       { withCredentials: true }
     );
@@ -38,7 +38,7 @@ const logout = async () => {
 // ---------------- Fetch Admin Email ----------------
 const fetchAdminEmail = async () => {
   try {
-    const res = await axios.get("http://localhost:8000/users/admin/profile", {
+    const res = await axios.get(`${backend}/users/admin/profile`, {
       withCredentials: true,
     });
     adminEmail.value = res.data.email;

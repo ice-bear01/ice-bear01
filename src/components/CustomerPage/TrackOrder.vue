@@ -24,6 +24,7 @@ interface OrderResponse {
   delivery_address?: DeliveryAddress;
 }
 
+const backend = import.meta.env.VITE_BACKEND_URL
 const orders = ref<OrderResponse[]>([]);
 const loading = ref(false);
 const error = ref('');
@@ -90,7 +91,7 @@ const fetchOrders = async () => {
   error.value = '';
 
   try {
-    const response = await axios.get<OrderResponse[]>('http://localhost:8000/orders/', {
+    const response = await axios.get<OrderResponse[]>(`${backend}/orders/`, {
       withCredentials: true,
     });
     orders.value = response.data;

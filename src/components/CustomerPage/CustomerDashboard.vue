@@ -7,7 +7,7 @@ import router from "@/router";
 import axios from "axios";
 
 const orderStore = useOrderStore();
-
+const backend = import.meta.env.VITE_BACKEND_URL
 // state to toggle dropdown visibility
 const showMenu = ref(false);
 
@@ -41,7 +41,7 @@ const goToHome = () => {
 };
 const logout = async () => {
   showMenu.value = false;
-  await axios.post("http://localhost:8000/users/auth/logout", { withCredentials: true });
+  await axios.post(`${backend}/users/auth/logout`, { withCredentials: true });
   router.push("/login");
 };
 </script>
@@ -77,23 +77,23 @@ const logout = async () => {
         <!-- Dropdown Menu -->
         <transition name="fade">
           <div v-if="showMenu"
-            class="absolute top-14 right-0 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
-            <ul class="flex flex-col">
+            class="absolute top-14 right-0 w-48 flex bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+            <ul class="flex flex-col w-full">
               <li>
                 <button @click="goToProfile"
-                  class="flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium">
+                  class="flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
                   <i class="fa-solid fa-user w-6 flex-shrink-0"></i>
                   <span class="ml-2">Profile</span>
                 </button>
               </li>
               <li>
-                <button @click="goToHome" class="flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium">
+                <button @click="goToHome" class="flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
                   <i class="fa-solid fa-home w-6 flex-shrink-0"></i>
                   <span class="ml-2">Home</span>
                 </button>
               </li>
               <li>
-                <button @click="logout" class="flex items-center px-4 py-2 hover:bg-red-100 text-red-600 font-medium">
+                <button @click="logout" class="flex items-center px-4 py-2 hover:bg-red-100 text-red-600 font-medium w-full">
                   <i class="fa-solid fa-right-from-bracket w-6 flex-shrink-0"></i>
                   <span class="ml-2">Logout</span>
                 </button>

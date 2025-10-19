@@ -4,7 +4,7 @@ import axios from "axios";
 import { useLoadingStore } from "@/store/loading";
 
 const loading = useLoadingStore();
-
+const backend = import.meta.env.VITE_BACKEND_URL
 // ----------------- Interfaces -----------------
 interface DeliveryAddress {
   house_number?: string;
@@ -44,7 +44,7 @@ const showLogs = ref(false);
 // ----------------- Fetch Orders -----------------
 const fetchOrders = async () => {
   try {
-    const res = await axios.get<Order[]>("http://localhost:8000/orders/order-admin");
+    const res = await axios.get<Order[]>(`${backend}/orders/order-admin`);
     orders.value = res.data.map(order => ({ ...order, actionLoading: false }));
   } catch (err) {
     console.error(err);
@@ -55,7 +55,7 @@ const fetchOrders = async () => {
 // ----------------- Fetch Order Logs -----------------
 const fetchOrderLogs = async () => {
   try {
-    const res = await axios.get<OrderLog[]>("http://localhost:8000/orders/order-log");
+    const res = await axios.get<OrderLog[]>(`${backend}/orders/order-log`);
     // Map to ensure delivery_address always exists
     orderLogs.value = res.data.map(log => ({
       ...log,
@@ -105,7 +105,7 @@ const approveOrFinishOrder = async (order: Order) => {
   try {
     loading.show();
     const newStatus = order.status.toLowerCase() === "pending" ? "processing" : "installed/shipped";
-    await axios.put(`http://localhost:8000/orders/update-status/${order.order_id}`, { status: newStatus });
+    await axios.put(`${backend}/orders/update-status/${order.order_id}`, { status: newStatus });
     order.status = newStatus;
     fetchOrderLogs(); // refresh logs
   } catch (err) {
@@ -123,7 +123,7 @@ const rejectOrder = async (order: Order) => {
 
   try {
     loading.show();
-    await axios.put(`http://localhost:8000/orders/reject-order/${order.order_id}`);
+    await axios.put(`${backend}/orders/reject-order/${order.order_id}`);
     order.status = "rejected";
     fetchOrderLogs(); // refresh logs
   } catch (err) {
@@ -141,7 +141,7 @@ const deleteOrder = async (order: Order) => {
 
   try {
     loading.show();
-    await axios.delete(`http://localhost:8000/orders/${order.order_id}`);
+    await axios.delete(`${backend}/orders/${order.order_id}`);
     orders.value = orders.value.filter(o => o.order_id !== order.order_id);
     fetchOrderLogs(); // refresh logs
   } catch (err) {

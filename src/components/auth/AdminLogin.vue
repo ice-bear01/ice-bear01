@@ -4,6 +4,8 @@ import axios from 'axios'
 import { ref } from 'vue'
 import { useLoadingStore } from '@/store/loading'
 
+const backend = import.meta.env.VITE_BACKEND_URL
+
 const loading = useLoadingStore()
 
 const email = ref<string>('')
@@ -14,7 +16,7 @@ const toAdminLogin = async () => {
   try {
     loading.show()
     const login = await axios.post(
-      'http://localhost:8000/users/auth/admin/login',
+      `${backend}/users/auth/admin/login`,
       { email: email.value, password: password.value },
       { withCredentials: true }
     )

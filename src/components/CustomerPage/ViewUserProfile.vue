@@ -3,6 +3,8 @@ import { ref, onMounted } from "vue"
 import axios from "axios"
 import defaultProfileImage from "@/assets/img/logo.jpg"
 
+const backend = import.meta.env.VITE_BACKEND_URL
+
 interface UserAddress {
   id: number
   house_number: string
@@ -61,7 +63,7 @@ onMounted(async () => {
 
   // ---------------- Fetch user profile ----------------
   try {
-    const res = await axios.get("http://localhost:8000/users/profile", {
+    const res = await axios.get(`${backend}/users/profile`, {
       withCredentials: true,
     })
     email.value = res.data.email
@@ -77,7 +79,7 @@ const fetchAddresses = async () => {
   if (USE_MOCK) return
   try {
     const res = await axios.get<UserAddress[]>(
-      "http://localhost:8000/users/addresses",
+      `${backend}/users/addresses`,
       { withCredentials: true }
     )
     addresses.value = res.data
@@ -102,7 +104,7 @@ const handleImageUpload = (event: Event) => {
     if (USE_MOCK) return
     try {
       const res = await axios.post(
-        "http://localhost:8000/users/upload-profile-image",
+        `${backend}/users/upload-profile-image`,
         { profile_image: base64Image },
         { withCredentials: true }
       )
@@ -142,7 +144,7 @@ const addAddress = async () => {
 
   try {
     await axios.post(
-      "http://localhost:8000/users/address/add",
+      `${backend}/users/address/add`,
       newAddress.value,
       { withCredentials: true }
     )
@@ -165,7 +167,7 @@ const activateAddress = async (id: number) => {
 
   try {
     await axios.put(
-      `http://localhost:8000/users/address/${id}/activate`,
+      `${backend}/users/address/${id}/activate`,
       { is_active: true },
       { withCredentials: true }
     )
@@ -184,7 +186,7 @@ const deleteAddress = async (id: number) => {
   }
 
   try {
-    await axios.delete(`http://localhost:8000/users/address/${id}`, {
+    await axios.delete(`${backend}/users/address/${id}`, {
       withCredentials: true,
     })
     await fetchAddresses()

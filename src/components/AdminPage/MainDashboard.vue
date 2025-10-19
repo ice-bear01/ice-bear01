@@ -5,7 +5,7 @@ import VueApexCharts from "vue3-apexcharts";
 // ---------------- Summary Cards ----------------
 const pendingOrders = ref(0);
 const newCustomers = ref(0);
-
+const backend = import.meta.env.VITE_BACKEND_URL
 // ---------------- Donut Chart ----------------
 const donutSeries = ref([]);
 const donutLabels = ref([]);
@@ -47,7 +47,7 @@ const lineOptions = ref({
 // ---------------- Fetch Functions ----------------
 const fetchDashboardData = async () => {
   try {
-    const res = await fetch("http://localhost:8000/orders/dashboard-data");
+    const res = await fetch(`${backend}/orders/dashboard-data`);
     const data = await res.json();
 
     // Donut: Most ordered product categories
@@ -91,7 +91,7 @@ const fetchDashboardData = async () => {
 
 const fetchPendingOrders = async () => {
   try {
-    const res = await fetch("http://localhost:8000/orders/pending-orders-count");
+    const res = await fetch(`${backend}/orders/pending-orders-count`);
     const data = await res.json();
     pendingOrders.value = data.pending_count;
   } catch (err) {
@@ -101,7 +101,7 @@ const fetchPendingOrders = async () => {
 
 const fetchNewCustomerCount = async () => {
   try {
-    const res = await fetch("http://localhost:8000/users/new-customer-count");
+    const res = await fetch(`${backend}/users/new-customer-count`);
     const data = await res.json();
     newCustomers.value = data.today_new_customers;
   } catch (err) {

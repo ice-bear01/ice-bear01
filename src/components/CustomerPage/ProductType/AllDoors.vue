@@ -6,7 +6,7 @@ import { useOrderStore } from '@/store/order'
 
 const router = useRouter()
 const orderStore = useOrderStore()
-
+const backend = import.meta.env.VITE_BACKEND_URL
 // Product interface
 interface Product {
   product_id: number
@@ -51,7 +51,7 @@ const orderProduct = (product: Product) => {
 // Fetch "Door" products from backend
 onMounted(async () => {
   try {
-    const { data } = await axios.get('http://localhost:8000/product/category/door')
+    const { data } = await axios.get(`${backend}/product/category/door`)
     products.value = data.map((p: any) => ({
       product_id: p.id,
       product_image: p.product_image,

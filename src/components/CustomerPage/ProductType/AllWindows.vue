@@ -6,7 +6,7 @@ import { useOrderStore } from '@/store/order'; // Pinia store
 
 const router = useRouter();
 const orderStore = useOrderStore();
-
+const backend = import.meta.env.VITE_BACKEND_URL
 interface Product {
   product_id: number;
   product_image?: string;
@@ -46,7 +46,7 @@ const orderProduct = (product: Product) => {
 // ✅ Fetch "Window" products from backend
 onMounted(async () => {
   try {
-    const { data } = await axios.get('http://localhost:8000/product/category/window');
+    const { data } = await axios.get(`${backend}/product/category/window`);
     products.value = data.map((p: any) => ({
       product_id: p.id, 
       product_image: p.product_image,

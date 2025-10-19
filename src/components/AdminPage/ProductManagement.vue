@@ -5,7 +5,7 @@ import axios from "axios";
 import { useLoadingStore } from "@/store/loading";
 
 const loading = useLoadingStore();
-
+const backend = import.meta.env.VITE_BACKEND_URL
 interface Product {
   id: number;
   product_image: string;
@@ -24,7 +24,7 @@ const search = ref("");
 // Fetch products
 const fetchProducts = async () => {
   try {
-    const res = await axios.get<Product[]>("http://localhost:8000/product/all");
+    const res = await axios.get<Product[]>(`${backend}/product/all`);
     products.value = res.data.map((p) => ({ ...p, actionLoading: false }));
   } catch (err) {
     console.error("Failed to fetch products:", err);
@@ -50,7 +50,7 @@ const deleteProduct = async (id: number) => {
   if (!confirm("Are you sure you want to delete this product?")) return;
   try {
     loading.show();
-    await axios.delete(`http://localhost:8000/product/delete/${id}`);
+    await axios.delete(`${backend}/product/delete/${id}`);
     products.value = products.value.filter((p) => p.id !== id);
     alert("Product deleted successfully.");
     loading.hide();

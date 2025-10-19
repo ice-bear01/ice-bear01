@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { useOrderStore } from '@/store/order'
 
+const backend = import.meta.env.VITE_BACKEND_URL
 const orderStore = useOrderStore()
 const route = useRoute()
 const product_id = Number(route.params.product_id)
@@ -53,7 +54,7 @@ const product = ref<ProductDetail | null>(null)
 
 onMounted(async () => {
   try {
-    const { data } = await axios.get(`http://localhost:8000/product/${product_id}`)
+    const { data } = await axios.get(`${backend}/product/${product_id}`)
     product.value = data
   } catch (error) {
     console.error('Failed to fetch product:', error)
