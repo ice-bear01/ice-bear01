@@ -55,7 +55,7 @@ const logout = async () => {
     <nav
       class="h-20 w-full flex justify-between items-center px-6 bg-gradient-to-r from-sky-100 to-white shadow-lg sticky top-0 z-50 rounded-b-2xl border-b border-sky-200">
       <!-- Logo & Name -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3" @click="$router.push('/dashboard/home')">
         <img :src="logo" alt="Logo" class="h-14 w-14 rounded-xl shadow-sm object-cover" />
         <h1 class="font-bold sm:text-2xl text-sky-800 underline">3J's Glass & Aluminum Supply</h1>
       </div>

@@ -28,7 +28,7 @@ const logout = async () => {
       {},
       { withCredentials: true }
     );
-    router.push("/admin/login");
+    router.push("/");
   } catch (err) {
     console.error("Logout failed:", err);
     alert("Logout failed. Please try again.");
