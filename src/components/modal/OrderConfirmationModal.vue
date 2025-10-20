@@ -97,7 +97,7 @@ const closeModal = () => {
 <template>
   <div
     v-if="orderStore.showModal"
-    class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+    class="fixed inset-0 bg-black/60 flex items-center justify-center z-60 p-4"
   >
     <div
       class="bg-white/10 text-white rounded-3xl p-6 w-full max-w-[700px] backdrop-blur-md shadow-lg flex flex-col md:flex-row gap-6 items-center md:items-start overflow-y-auto max-h-[550px]"

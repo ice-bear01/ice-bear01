@@ -164,7 +164,7 @@ onMounted(async () => {
         <p class="font-semibold text-lg truncate">{{ product.product_name }}</p>
         <p class="text-white/70 text-sm">₱{{ product.product_price.toLocaleString() }}</p>
         <p class="text-white/70 text-sm">Stock: {{ product.product_stock }}</p>
-        <p class="text-white/50 text-xs mt-1 line-clamp-2">
+        <p class="text-white/50 text-xs mt-1 line-clamp-2 truncate">
           {{ product.product_description }}
         </p>
       </div>

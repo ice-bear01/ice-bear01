@@ -85,7 +85,7 @@ onMounted(async () => {
         <p class="font-semibold text-lg">{{ product.product_name }}</p>
         <p class="text-white/70">Price: ${{ product.product_price }}</p>
         <p class="text-white/70">Stock: {{ product.product_stock }}</p>
-        <p class="text-white/50 text-sm mt-1">{{ product.product_description }}</p>
+        <p class="text-white/50 text-sm mt-1 truncate">{{ product.product_description }}</p>
       </div>
 
       <div class="flex gap-3 mt-auto">
