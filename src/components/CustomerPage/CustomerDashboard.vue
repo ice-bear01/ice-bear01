@@ -39,6 +39,10 @@ const goToHome = () => {
   showMenu.value = false;
   router.push("/dashboard");
 };
+const goToFeedback = () => {
+  showMenu.value = false;
+  router.push("/dashboard/feedback");
+};
 const logout = async () => {
   showMenu.value = false;
   await axios.post(`${backend}/users/auth/logout`, { withCredentials: true });
@@ -74,7 +78,6 @@ const logout = async () => {
         </button>
 
         <!-- Dropdown Menu -->
-        <!-- Dropdown Menu -->
         <transition name="fade">
           <div v-if="showMenu"
             class="absolute top-14 right-0 w-48 flex bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
@@ -90,6 +93,12 @@ const logout = async () => {
                 <button @click="goToHome" class="flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
                   <i class="fa-solid fa-home w-6 flex-shrink-0"></i>
                   <span class="ml-2">Home</span>
+                </button>
+              </li>
+                            <li>
+                <button @click="goToFeedback" class="flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
+                  <i class="fa-solid fa-message w-6 flex-shrink-0"></i>
+                  <span class="ml-2">Feedback</span>
                 </button>
               </li>
               <li>

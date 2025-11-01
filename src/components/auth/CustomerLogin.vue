@@ -5,18 +5,20 @@ import { ref } from 'vue'
 import { useLoadingStore } from '@/store/loading'
 
 const backend = import.meta.env.VITE_BACKEND_URL
-
 const loading = useLoadingStore()
 
 const email = ref<string>('')
 const password = ref<string>('')
 
+// Forgot Password States
 const showForgotModal = ref(false)
 const forgotEmail = ref('')
 const verificationCode = ref('')
-const step = ref(1) // 1 = input email, 2 = input verification code
+const newPassword = ref('')
+const step = ref(1) // 1=email, 2=code, 3=new password
 const sendingCode = ref(false)
 
+// ------------------- Login -------------------
 const toLogin = async () => {
   try {
     loading.show()
@@ -35,7 +37,7 @@ const toLogin = async () => {
   }
 }
 
-// Send verification code for password reset
+// ------------------- Forgot Password Steps -------------------
 const sendForgotCode = async () => {
   if (!forgotEmail.value.trim()) return
   try {
@@ -43,10 +45,9 @@ const sendForgotCode = async () => {
     sendingCode.value = true
     const res = await axios.post(`${backend}/auth/send-code`, {
       email: forgotEmail.value,
+      purpose: 'reset_password'
     })
-    if (res) {
-      step.value = 2
-    }
+    if (res) step.value = 2
   } catch (err) {
     console.error('Error sending reset code:', err)
   } finally {
@@ -55,23 +56,39 @@ const sendForgotCode = async () => {
   }
 }
 
-// Verify the code (optional: next step could be change password)
 const verifyForgotCode = async () => {
   try {
     loading.show()
     const verify = await axios.post(`${backend}/auth/verify-code`, {
       email: forgotEmail.value,
-      code: verificationCode.value,
+      code: verificationCode.value
     })
-    if (verify) {
-      alert('Email verified! You can now reset your password.')
+    if (verify) step.value = 3
+  } catch (err) {
+    console.error('Verification failed:', err)
+  } finally {
+    loading.hide()
+  }
+}
+
+const changePassword = async () => {
+  if (!newPassword.value.trim()) return
+  try {
+    loading.show()
+    const res = await axios.put(`${backend}/users/auth/change-password`, {
+      email: forgotEmail.value,
+      new_password: newPassword.value
+    })
+    if (res) {
+      alert('Password changed successfully! You can now log in.')
       showForgotModal.value = false
       step.value = 1
       forgotEmail.value = ''
       verificationCode.value = ''
+      newPassword.value = ''
     }
   } catch (err) {
-    console.error('Verification failed:', err)
+    console.error('Password change failed:', err)
   } finally {
     loading.hide()
   }
@@ -143,7 +160,7 @@ const verifyForgotCode = async () => {
       class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50"
     >
       <div class="bg-white rounded-2xl shadow-2xl p-8 w-[90%] sm:w-[400px] text-gray-800 relative">
-        <p class="text-xl font-bold mb-2 text-center">Reset Password</p>
+        <p class="text-xl font-bold mb-4 text-center">Reset Password</p>
 
         <!-- Step 1: Enter Email -->
         <div v-if="step === 1">
@@ -199,6 +216,34 @@ const verifyForgotCode = async () => {
             </button>
           </div>
         </div>
+
+        <!-- Step 3: Change Password -->
+        <div v-else-if="step === 3">
+          <p class="text-sm text-gray-600 mb-4 text-center">
+            Enter your new password.
+          </p>
+          <input
+            v-model="newPassword"
+            type="password"
+            placeholder="New password"
+            class="border border-gray-300 rounded-xl px-4 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-[#00a4b5]"
+          />
+          <div class="flex justify-between gap-3">
+            <button
+              @click="step = 2"
+              class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl w-1/2 hover:bg-gray-300 transition"
+            >
+              Back
+            </button>
+            <button
+              @click="changePassword"
+              class="bg-[#00a4b5] text-white px-4 py-2 rounded-xl w-1/2 hover:bg-[#008c9e] transition"
+            >
+              Change Password
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>

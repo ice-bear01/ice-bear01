@@ -34,9 +34,9 @@ interface ProductDetail {
   product_description: string
   product_price: number
   product_stock: number
-  key_benefits: KeyBenefit[]
+  benefits: KeyBenefit[]
   specification: Specification[]
-  gallery: Gallery[]
+  installation_gallery: Gallery[]
 }
 
 interface Product {
@@ -100,7 +100,7 @@ const orderProduct = () => {
 
       <!-- 📋 Right: Product Details -->
       <div
-        class="flex-1 flex flex-col bg-gray-100 rounded-2xl p-6 sm:p-8 gap-6"
+        class="flex-1 flex flex-col bg-white/80 rounded-2xl p-6 sm:p-8 gap-6"
       >
         <div class="flex-1 overflow-y-auto scrollbar-custom">
           <div v-if="product" class="flex flex-col gap-6">
@@ -146,7 +146,7 @@ const orderProduct = () => {
               </p>
               <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div
-                  v-for="benefit in product.key_benefits"
+                  v-for="benefit in product.benefits"
                   :key="benefit.benefit_title"
                   class="p-4 rounded-xl border-l-4 border-sky-500 bg-white flex flex-col gap-2"
                 >
@@ -166,8 +166,8 @@ const orderProduct = () => {
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-gray-300 pt-4">
           <div class="flex flex-col sm:flex-row items-center gap-4 text-gray-700 text-base sm:text-lg">
             <div class="flex items-center gap-2">
-              <i class="fas fa-dollar-sign text-green-500"></i>
-              <span>${{ product?.product_price }}</span>
+              <i class="fas fa-peso-sign text-green-500"></i>
+              <span>{{ product?.product_price }}</span>
             </div>
             <div class="flex items-center gap-2">
               <i class="fas fa-box text-blue-500"></i>
@@ -194,12 +194,12 @@ const orderProduct = () => {
     </div>
 
     <!-- 🔹 Gallery Section -->
-    <div class="w-full p-6 sm:p-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl">
+    <div class="w-full p-6 sm:p-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <div
-        v-if="product?.gallery.length"
-        v-for="img in product.gallery"
+        v-if="product?.installation_gallery.length"
+        v-for="img in product.installation_gallery"
         :key="img.image"
-        class="rounded-3xl overflow-hidden relative cursor-pointer group bg-white/10 backdrop-blur-md border border-white/20 hover:scale-[1.02] transition-transform"
+        class="rounded-3xl overflow-hidden relative cursor-pointer group bg-white/80 backdrop-blur-md border border-gray-500/70 hover:scale-[1.02] transition-transform p-2 max-w-[300px]"
       >
         <!-- Image -->
         <div class="h-56 sm:h-64 w-full relative rounded-t-3xl overflow-hidden">
@@ -211,7 +211,7 @@ const orderProduct = () => {
         </div>
 
         <!-- Description -->
-        <div class="p-4 text-white text-center bg-white/5">
+        <div class="p-6 text-gray-900 text-center bg-white/5">
           <p class="text-sm sm:text-base">{{ img.description }}</p>
         </div>
       </div>

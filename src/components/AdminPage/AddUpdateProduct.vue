@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import { useLoadingStore } from "@/store/loading";
@@ -9,20 +9,41 @@ const route = useRoute();
 const router = useRouter();
 const isEditing = ref(false);
 const productId = ref(null);
-const backend = import.meta.env.VITE_BACKEND_URL
-// Product structure aligned with backend
+const backend = import.meta.env.VITE_BACKEND_URL;
+
+// -----------------------------
+// Product structure
+// -----------------------------
 const product = ref({
   category: "",
   product_image: "",
-  product_image_file: null, // file object
+  product_image_file: null,
   product_type: "",
   product_name: "",
   product_description: "",
   product_price: null,
-  product_stock: null,
-  key_benefits: [],
+  benefits: [],
   specification: [],
-  gallery: [],
+  installation_gallery: [],
+});
+
+// -----------------------------
+// Dropdown options
+// -----------------------------
+const categories = ["Doors", "Windows", "Others"];
+const typeMap = {
+  Doors: ["Sliding", "Swing", "Folding", "Bifold"],
+  Windows: ["Sliding", "Casement", "Awning", "Fixed"],
+  Others: ["Glass Tabletops", "Mirrors", "Shelving", "Display Cases"],
+};
+const typeOptions = ref([]);
+
+watch(() => product.value.category, (newCategory, oldCategory) => {
+  typeOptions.value = typeMap[newCategory] || [];
+
+  if (oldCategory && oldCategory !== newCategory) {
+    product.value.product_type = "";
+  }
 });
 
 // -----------------------------
@@ -33,8 +54,6 @@ onMounted(async () => {
     isEditing.value = true;
     productId.value = route.params.id;
     const { data } = await axios.get(`${backend}/product/${productId.value}`);
-
-    // Map backend response to local model
     product.value = {
       category: data.category,
       product_image: data.product_image,
@@ -43,35 +62,30 @@ onMounted(async () => {
       product_name: data.product_name,
       product_description: data.product_description,
       product_price: data.product_price,
-      product_stock: data.product_stock,
-      key_benefits: data.key_benefits.map(b => ({
-        benefit_title: b.benefit_title,
-        benefit_description: b.benefit_description
-      })),
-      specification: data.specification.map(s => ({
-        specification_title: s.specification_title,
-        specification_description: s.specification_description
-      })),
-      gallery: data.gallery.map(g => ({
+      benefits: data.benefits.map(b => ({ ...b })),
+      specification: data.specification.map(s => ({ ...s })),
+      installation_gallery: data.installation_gallery.map(g => ({
         image: g.image,
         description: g.description,
         image_file: null,
-      }))
+      })),
     };
+    // Set type options based on loaded category
+    typeOptions.value = typeMap[product.value.category] || [];
   }
 });
 
 // -----------------------------
 // Dynamic list handling
 // -----------------------------
-const addKeyBenefit = () => product.value.key_benefits.push({ benefit_title: "", benefit_description: "" });
-const removeKeyBenefit = (i) => product.value.key_benefits.splice(i, 1);
+const addKeyBenefit = () => product.value.benefits.push({ benefit_title: "", benefit_description: "" });
+const removeKeyBenefit = (i) => product.value.benefits.splice(i, 1);
 
 const addSpecification = () => product.value.specification.push({ specification_title: "", specification_description: "" });
 const removeSpecification = (i) => product.value.specification.splice(i, 1);
 
-const addGalleryItem = () => product.value.gallery.push({ image_file: null, image: "", description: "" });
-const removeGalleryItem = (i) => product.value.gallery.splice(i, 1);
+const addGalleryItem = () => product.value.installation_gallery.push({ image_file: null, image: "", description: "" });
+const removeGalleryItem = (i) => product.value.installation_gallery.splice(i, 1);
 
 // -----------------------------
 // File handling
@@ -89,36 +103,27 @@ const handleProductImage = (event) => {
 const handleGalleryImage = (event, index) => {
   const file = event.target.files[0];
   if (file) {
-    product.value.gallery[index].image_file = file;
+    product.value.installation_gallery[index].image_file = file;
     const reader = new FileReader();
     reader.onload = (e) => {
-      product.value.gallery[index].image = e.target.result; // for preview & backend
+      product.value.installation_gallery[index].image = e.target.result;
     };
     reader.readAsDataURL(file);
   }
 };
 
 // -----------------------------
-// Submit with validation
+// Save product
 // -----------------------------
 const saveProduct = async () => {
   try {
-    // ------------------------
-    // Basic validation
-    // ------------------------
-    if (
-      !product.value.category ||
-      !product.value.product_type ||
-      !product.value.product_name ||
-      !product.value.product_description ||
-      product.value.product_price === null ||
-      product.value.product_stock === null
-    ) {
+    if (!product.value.category || !product.value.product_type || !product.value.product_name || !product.value.product_description ||
+      product.value.product_price === null || product.value.product_stock === null) {
       alert("Please fill in all required fields.");
       return;
     }
 
-    const MAX_PRICE = 99999999.99; // matches DECIMAL(10,2)
+    const MAX_PRICE = 99999999.99;
     if (product.value.product_price > MAX_PRICE) {
       alert(`Price cannot exceed ${MAX_PRICE.toLocaleString()}`);
       return;
@@ -129,7 +134,7 @@ const saveProduct = async () => {
       return;
     }
 
-    for (const b of product.value.key_benefits) {
+    for (const b of product.value.benefits) {
       if (!b.benefit_title || !b.benefit_description) {
         alert("Please fill in all key benefit fields.");
         return;
@@ -143,40 +148,29 @@ const saveProduct = async () => {
       }
     }
 
-    for (const g of product.value.gallery) {
+    for (const g of product.value.installation_gallery) {
       if (!g.image || !g.description) {
         alert("Please fill in all gallery items.");
         return;
       }
     }
 
-    // ------------------------
-    // Prepare payload
-    // ------------------------
     const payload = {
       category: product.value.category,
       product_type: product.value.product_type,
       product_name: product.value.product_name,
       product_description: product.value.product_description,
       product_price: product.value.product_price,
-      product_stock: product.value.product_stock,
       product_image: product.value.product_image,
-      key_benefits: product.value.key_benefits,
+      benefits: product.value.benefits,
       specification: product.value.specification,
-      gallery: product.value.gallery.map(g => ({
-        image: g.image,
-        description: g.description
-      }))
+      installation_gallery: product.value.installation_gallery.map(g => ({ image: g.image, description: g.description })),
     };
 
-    // ------------------------
-    // Save to backend
-    // ------------------------
+    loading.show();
     if (isEditing.value) {
-      loading.show();
       await axios.put(`${backend}/product/update/${productId.value}`, payload);
     } else {
-      loading.show();
       await axios.post(`${backend}/product/add-product`, payload);
     }
     loading.hide();
@@ -189,6 +183,7 @@ const saveProduct = async () => {
   }
 };
 </script>
+
 <template>
   <div class="p-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white rounded-2xl shadow-xl">
     <h2 class="text-3xl font-bold mb-6 text-center tracking-wide">
@@ -196,28 +191,36 @@ const saveProduct = async () => {
     </h2>
 
     <form @submit.prevent="saveProduct" class="space-y-10">
-      <!-- Product Details -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- Left Column -->
         <div class="space-y-5">
+          <!-- Category Dropdown -->
           <div>
             <label class="block mb-1 text-gray-300 font-medium">Category</label>
-            <input v-model="product.category" placeholder="Enter category"
-              class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 focus:ring-2 focus:ring-blue-500 transition" required />
+            <select v-model="product.category"
+              class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 focus:ring-2 focus:ring-blue-500 transition" required>
+              <option value="" disabled>Select Category</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
           </div>
 
+          <!-- Product Type Dropdown -->
           <div>
             <label class="block mb-1 text-gray-300 font-medium">Product Type</label>
-            <input v-model="product.product_type" placeholder="Enter product type"
-              class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 focus:ring-2 focus:ring-blue-500 transition" required />
+            <select v-model="product.product_type"
+              class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 focus:ring-2 focus:ring-blue-500 transition" required>
+              <option value="" disabled>Select Type</option>
+              <option v-for="type in typeOptions" :key="type" :value="type">{{ type }}</option>
+            </select>
           </div>
 
+          <!-- Product Name -->
           <div>
             <label class="block mb-1 text-gray-300 font-medium">Product Name</label>
             <input v-model="product.product_name" placeholder="Enter product name"
               class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 focus:ring-2 focus:ring-blue-500 transition" required />
           </div>
 
+          <!-- Description -->
           <div>
             <label class="block mb-1 text-gray-300 font-medium">Description</label>
             <textarea v-model="product.product_description" placeholder="Write a short description"
@@ -240,18 +243,13 @@ const saveProduct = async () => {
           </div>
 
           <div>
-            <label class="block mb-1 text-gray-300 font-medium">Stock</label>
-            <input type="number" v-model.number="product.product_stock" placeholder="Enter stock quantity"
-              class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 focus:ring-2 focus:ring-blue-500 transition" required />
-          </div>
-
-          <div>
             <label class="block mb-1 text-gray-300 font-medium">Price</label>
             <input type="number" v-model.number="product.product_price" placeholder="Enter price"
               class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 focus:ring-2 focus:ring-blue-500 transition" required />
           </div>
         </div>
       </div>
+
 
       <!-- Key Benefits -->
       <div class="bg-gray-800/60 rounded-xl p-6 shadow-lg border border-gray-700">
@@ -261,7 +259,7 @@ const saveProduct = async () => {
             class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm transition">+ Add Benefit</button>
         </div>
 
-        <div v-for="(benefit, index) in product.key_benefits" :key="'benefit-' + index"
+        <div v-for="(benefit, index) in product.benefits" :key="'benefit-' + index"
           class="bg-gray-700/70 p-4 rounded-lg mb-3 space-y-2">
           <input v-model="benefit.benefit_title" placeholder="Benefit Title"
             class="w-full p-2 rounded bg-gray-800 border border-gray-600 focus:ring-1 focus:ring-blue-400 transition" />
@@ -300,7 +298,7 @@ const saveProduct = async () => {
         </div>
 
         <div class="flex gap-5 overflow-x-auto pb-3">
-          <div v-for="(item, index) in product.gallery" :key="'gallery-' + index"
+          <div v-for="(item, index) in product.installation_gallery" :key="'gallery-' + index"
             class="min-w-[200px] border border-gray-700 bg-gray-700/70 p-3 rounded-xl flex flex-col items-center hover:scale-105 transition-transform duration-300 shadow-md">
             
             <div
@@ -319,7 +317,7 @@ const saveProduct = async () => {
         </div>
       </div>
 
-      <!-- Buttons -->
+
       <div class="flex justify-end gap-4 pt-4">
         <button type="button" @click="router.go(-1)"
           class="px-5 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 transition font-medium">Cancel</button>
@@ -331,3 +329,9 @@ const saveProduct = async () => {
     </form>
   </div>
 </template>
+
+
+
+
+
+

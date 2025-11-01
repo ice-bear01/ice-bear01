@@ -12,6 +12,7 @@ const navItems = [
   { name: "Product Management", path: "/admin/product-management" },
   { name: "Order Management Panel", path: "/admin/order-management" },
   { name: "Recent Activities", path: "/admin/recent-activities" },
+  { name: "View Feedback", path: "/admin/view-feedback" },
 ];
 
 const adminEmail = ref(""); // <-- admin email here

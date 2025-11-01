@@ -1,80 +1,60 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import axios from "axios";
 
-const userActivities = ref([
-  {
-    id: 1,
-    user_email: "ruzhell@example.com",
-    action: "placed an order",
-    details: "Order #1024 — Steel Door",
-    time: "5 minutes ago",
-  },
-  {
-    id: 2,
-    user_email: "mikaela@example.com",
-    action: "signed up",
-    details: "New account created",
-    time: "10 minutes ago",
-  },
-  {
-    id: 3,
-    user_email: "ruzhell@example.com",
-    action: "updated profile",
-    details: "Changed profile picture",
-    time: "30 minutes ago",
-  },
-  {
-    id: 4,
-    user_email: "carlo@example.com",
-    action: "added new address",
-    details: "Cebu City, Philippines",
-    time: "1 hour ago",
-  },
-  {
-    id: 5,
-    user_email: "ruzhell@example.com",
-    action: "canceled an order",
-    details: "Order #1025 — Glass Window",
-    time: "2 hours ago",
-  },
-    {
-    id: 5,
-    user_email: "ruzhell@example.com",
-    action: "canceled an order",
-    details: "Order #1025 — Glass Window",
-    time: "2 hours ago",
-  },
-    {
-    id: 5,
-    user_email: "ruzhell@example.com",
-    action: "canceled an order",
-    details: "Order #1025 — Glass Window",
-    time: "2 hours ago",
-  },
-]);
+const userActivities = ref([]);
 
+const backend = import.meta.env.VITE_BACKEND_URL;
+
+const fetchRecentActivities = async () => {
+  try {
+    const response = await axios.get(`${backend}/admin/recent_activity`, {
+      withCredentials: true, // include cookies if needed
+    });
+    // Format the data for display
+    userActivities.value = response.data.map((item) => ({
+      id: item.id,
+      user_email: item.user_email,
+      action: item.action,
+      details: item.detail, // match your FastAPI field name
+      time: new Date(item.created_at).toLocaleString("en-PH", {
+        hour12: true,
+        dateStyle: "medium",
+        timeStyle: "short",
+      }),
+    }));
+  } catch (error) {
+    console.error("Error fetching recent activities:", error);
+  }
+};
+
+onMounted(() => {
+  fetchRecentActivities();
+});
+
+// 🎨 Icon and color functions
 const getActivityIcon = (action) => {
-  if (action.includes("order")) return "fa-cart-shopping";
-  if (action.includes("signed up")) return "fa-user-plus";
-  if (action.includes("updated profile")) return "fa-user-pen";
-  if (action.includes("added new address")) return "fa-location-dot";
-  if (action.includes("canceled")) return "fa-cart-shopping";
+  const act = action.toLowerCase();
+  if (act.includes("order")) return "fa-cart-shopping";
+  if (act.includes("sign")) return "fa-user-plus";
+  if (act.includes("address")) return "fa-location-dot";
+  if (act.includes("feedback")) return "fa-message";
   return "fa-circle-check";
 };
 
 const getActivityColor = (action) => {
-  if (action.includes("order")) return "text-green-400";
-  if (action.includes("signed up")) return "text-blue-400";
-  if (action.includes("updated profile")) return "text-yellow-400";
-  if (action.includes("added new address")) return "text-purple-400";
-  if (action.includes("canceled")) return "text-red-500";
+  const act = action.toLowerCase();
+  if (act.includes("order")) return "text-green-400";
+  if (act.includes("sign")) return "text-blue-400";
+  if (act.includes("feedback")) return "text-yellow-400";
+  if (act.includes("address")) return "text-purple-400";
   return "text-gray-300";
 };
 </script>
 
 <template>
   <div
-    class="bg-[#1f2937] text-white p-6 rounded-xl shadow-md h-screen overflow-y-auto relative"
+    class="bg-gray-900 text-white p-6 rounded-xl shadow-md h-screen overflow-y-auto relative mb-5"
   >
     <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
       <i class="fa-solid fa-clock-rotate-left"></i>

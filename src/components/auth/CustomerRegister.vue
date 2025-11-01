@@ -99,7 +99,7 @@ const verifyCode = async () => {
         { email: email.value, password: password.value },
         { withCredentials: true }
       )
-      router.push('/dashboard')
+      router.push('/dashboard/home')
     }
   } catch (error) {
     console.error('Verification failed:', error)

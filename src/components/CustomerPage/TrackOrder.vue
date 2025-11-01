@@ -29,63 +29,6 @@ const orders = ref<OrderResponse[]>([]);
 const loading = ref(false);
 const error = ref('');
 
-// const mockOrders: OrderResponse[] = [
-//   {
-//     order_id: 1,
-//     status: 'Pending',
-//     created_at: '2025-10-17T10:00:00Z',
-//     product_image: 'https://images.unsplash.com/photo-1606813902917-42e11f21c7e2?auto=format&fit=crop&w=600&q=80',
-//     product_category: 'Solar Energy',
-//     product_type: 'Panel Type A',
-//     product_name: 'SolarMax Pro 400W',
-//     product_price: 249.99,
-//     quantity: 2,
-//     total_price: 499.98,
-//     delivery_address: {
-//       house_number: '123',
-//       street: 'Sunshine St.',
-//       barangay: 'Greenfields',
-//       city: 'Manila',
-//       province: 'Metro Manila',
-//     },
-//   },
-//   {
-//     order_id: 2,
-//     status: 'Approved',
-//     created_at: '2025-10-12T15:30:00Z',
-//     product_image: 'https://images.unsplash.com/photo-1581093448795-5afadbfbbf2c?auto=format&fit=crop&w=600&q=80',
-//     product_category: 'Wind Energy',
-//     product_type: 'Turbine Model X',
-//     product_name: 'WindBlaze 3000',
-//     product_price: 1799.99,
-//     quantity: 1,
-//     total_price: 1799.99,
-//     delivery_address: {
-//       street: 'Ocean Breeze Ave.',
-//       barangay: 'Bluewater',
-//       city: 'Cebu City',
-//       province: 'Cebu',
-//     },
-//   },
-//   {
-//     order_id: 3,
-//     status: 'Rejected',
-//     created_at: '2025-10-10T08:45:00Z',
-//     product_image: 'https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=600&q=80',
-//     product_category: 'Hydro Energy',
-//     product_type: 'Turbine Mini',
-//     product_name: 'HydroSpin 1500',
-//     product_price: 499.99,
-//     quantity: 3,
-//     total_price: 1499.97,
-//     delivery_address: {
-//       street: 'Riverbank Road',
-//       city: 'Davao',
-//       province: 'Davao del Sur',
-//     },
-//   },
-// ];
-
 const fetchOrders = async () => {
   loading.value = true;
   error.value = '';
@@ -95,9 +38,6 @@ const fetchOrders = async () => {
       withCredentials: true,
     });
     orders.value = response.data;
-
-    // await new Promise((resolve) => setTimeout(resolve, 800)); // simulate loading
-    // orders.value = mockOrders;
   } catch (err: any) {
     console.error(err);
     error.value = 'Failed to fetch orders.';
@@ -134,13 +74,8 @@ const statusColor = (status: string) => {
       <div
         v-for="order in orders"
         :key="order.order_id"
-        class="flex flex-col md:flex-row gap-4 bg-white/10 p-5 rounded-xl backdrop-blur-md shadow-lg group hover:shadow-2xl transition relative overflow-hidden"
+        class="flex flex-col md:flex-row gap-4 p-5 rounded-xl shadow-lg group transition relative overflow-hidden bg-white/80"
       >
-        <div
-          class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-30 transition-all pointer-events-none"
-          style="transform: skewX(-20deg);"
-        ></div>
-
         <!-- Image -->
         <div class="w-full md:w-64 flex-shrink-0">
           <img
@@ -153,24 +88,24 @@ const statusColor = (status: string) => {
         <!-- Details -->
         <div class="flex-1 flex flex-col justify-between">
           <div class="space-y-2">
-            <h2 class="text-xl font-semibold text-white">{{ order.product_name }}</h2>
-            <p class="text-white/80 flex items-center gap-2">
+            <h2 class="text-xl font-semibold text-gray-800">{{ order.product_name }}</h2>
+            <p class="text-gray-700 flex items-center gap-2">
               <i class="fas fa-layer-group"></i> {{ order.product_category }} - {{ order.product_type }}
             </p>
 
-            <p class="text-white/80 flex items-center gap-2">
+            <p class="text-gray-700 flex items-center gap-2">
               <i class="fas fa-sort-numeric-up"></i> Quantity: {{ order.quantity }}
             </p>
 
-            <p class="text-white/80 flex items-center gap-2">
-              <i class="fas fa-dollar-sign"></i> Price: ${{ order.product_price }} | Total: ${{ order.total_price }}
+            <p class="text-gray-700 flex items-center gap-2">
+              <i class="fas fa-peso-sign"></i> Price: {{ order.product_price }} | Total: {{ order.total_price }}
             </p>
 
-            <p class="text-white/80 flex items-center gap-2">
+            <p class="text-gray-700 flex items-center gap-2">
               <i class="fas fa-calendar-alt"></i> {{ new Date(order.created_at).toLocaleString() }}
             </p>
 
-            <p class="flex items-center gap-2 mt-2 text-white">
+            <p class="flex items-center gap-2 mt-2 text-gray-800">
               <i class="fas fa-truck" :class="statusColor(order.status)"></i>
               <span class="font-medium">Status:</span>
               <span :class="['px-3 py-1 rounded-full text-sm font-semibold border', statusColor(order.status)]">
@@ -179,9 +114,9 @@ const statusColor = (status: string) => {
             </p>
           </div>
 
-          <div class="mt-4 bg-white/10 p-4 rounded-lg border border-white/20 flex items-start gap-2">
-            <i class="fas fa-map-marker-alt mt-1 text-white/70"></i>
-            <div class="text-white/80">
+          <div class="mt-4 p-4 rounded-lg border flex items-start gap-2" style="background-color: #B2EBF2;">
+            <i class="fas fa-map-marker-alt mt-1 text-gray-700"></i>
+            <div class="text-gray-800">
               <p class="font-semibold mb-1 text-lg">Delivery Address</p>
               <p>
                 {{ order.delivery_address?.house_number ?? '' }}

@@ -18,8 +18,8 @@ function selectType(type: string) {
 <template>
   <div class="flex flex-col gap-10 p-6 sm:p-10">
     <!-- Header -->
-    <div class="flex flex-col gap-3 text-white text-center">
-      <p class="font-bold text-3xl sm:text-4xl">Others</p>
+    <div class="flex flex-col gap-3 text-center">
+      <p class="font-bold text-3xl sm:text-4xl text-white">Others</p>
       <p class="max-w-xl mx-auto text-white/80 text-sm sm:text-base">
         Explore our extensive collection of premium glass and aluminum products.
       </p>
@@ -27,13 +27,13 @@ function selectType(type: string) {
 
     <!-- Filters -->
     <div
-      class="w-full rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 py-4 px-6 sm:px-10"
+      class="w-full rounded-3xl bg-white/80 backdrop-blur-xl border border-sky-100 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 py-4 px-6 sm:px-10 shadow-2xl"
     >
       <!-- Dropdown -->
       <div class="relative w-full sm:w-48">
         <button
           @click="dropdownOpen = !dropdownOpen"
-          class="w-full px-4 py-3 bg-white/20 text-white rounded-3xl border border-white/30 flex justify-between items-center hover:bg-white/30 transition"
+          class="w-full px-4 py-3 bg-white/20 text-gray-800 rounded-3xl border border-white/30 flex justify-between items-center hover:bg-white/30 transition"
         >
           <span>{{ selectedType }}</span>
           <svg
@@ -50,13 +50,13 @@ function selectType(type: string) {
         <!-- Dropdown List -->
         <div
           v-if="dropdownOpen"
-          class="absolute mt-2 w-full bg-white/10 backdrop-blur-md border border-white/30 rounded-2xl overflow-hidden z-50"
+          class="absolute mt-2 w-full bg-white/80 backdrop-blur-xl border border-sky-100 rounded-2xl overflow-hidden z-50"
         >
           <div
             v-for="type in productTypes"
             :key="type"
             @click="selectType(type)"
-            class="px-4 py-3 cursor-pointer hover:bg-white/20 transition text-white text-sm sm:text-base"
+            class="px-4 py-3 cursor-pointer hover:bg-white/30 transition text-gray-800 text-sm sm:text-base"
           >
             {{ type }}
           </div>
@@ -69,7 +69,7 @@ function selectType(type: string) {
           type="text"
           v-model="searchOthers"
           placeholder="Search..."
-          class="w-full sm:w-64 px-5 py-3 rounded-3xl bg-white/20 backdrop-blur-sm border border-white/30 placeholder-white/70 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition"
+          class="w-full sm:w-64 px-5 py-3 rounded-3xl bg-white/20 backdrop-blur-xl border border-sky-100 placeholder-gray-500 text-gray-800 focus:outline-none focus:ring-2 focus:ring-sky-200 transition"
         />
       </div>
     </div>

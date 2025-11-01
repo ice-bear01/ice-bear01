@@ -7,7 +7,6 @@ interface ProductDetails {
   category: string;
   product_type: string;
   product_price: number;
-  product_stock: number;
   product_description?: string;
 }
 
