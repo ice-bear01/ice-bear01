@@ -5,7 +5,7 @@ import AllOthers from './ProductType/AllOthers.vue'
 const currentOthersComponent = ref<any>(AllOthers)
 const searchOthers = ref('')
 const selectedType = ref('All')
-const productTypes = ['All', 'Glass tabletops', 'Mirrors', 'Shelving', 'Display cases']
+const productTypes = ["Glass Tabletops", "Mirrors", "Shelving","Railing","Panel","Frame","Display Cases", "Others"]
 
 const dropdownOpen = ref(false)
 

@@ -151,34 +151,7 @@ const closeModal = () => {
       class="relative bg-white/80 rounded-3xl p-6 w-full max-w-[700px] backdrop-blur-md shadow-lg flex flex-col md:flex-row gap-6 items-center md:items-start overflow-y-auto max-h-[550px] sm:max-h-[450px]"
     >
       <!-- Info icon + tooltip (use mouseover/mouseout for reliability) -->
-      <div
-        class="absolute right-4 top-4"
-        @mouseover="showInfo = true"
-        @mouseout="showInfo = false"
-        @focusin="showInfo = true"
-        @focusout="showInfo = false"
-      >
-        <i
-          class="fa-solid fa-circle-info text-xl text-[#006989] cursor-pointer"
-          tabindex="0"
-          aria-label="Product info"
-        ></i>
-
-        <transition name="fade">
-          <div
-            v-if="showInfo"
-            class="absolute top-0 right-0 w-64 bg-white text-black text-sm p-3 rounded-lg shadow-lg border border-gray-300 z-50"
-            role="tooltip"
-          >
-            <p class="font-semibold text-[#006989] mb-1">Product Info</p>
-            <p class="leading-snug">
-              Order quantity must be between <strong>1–99</strong>. You can type the number directly.
-              Non-digit characters are removed automatically. The value is clamped when you leave
-              the field or confirm.
-            </p>
-          </div>
-        </transition>
-      </div>
+      
 
       <!-- Product Image -->
       <div class="w-full md:w-1/2 h-56 md:h-64 rounded-2xl overflow-hidden bg-white/5 flex-shrink-0">
@@ -206,6 +179,29 @@ const closeModal = () => {
           Price/Meter:
           <span class="text-green-500">₱{{ orderStore.selectedProduct?.product_price }}</span>
         </p>
+
+<!-- Red clickable note -->
+<p
+  class="text-red-600 underline cursor-pointer text-sm"
+  @click="showInfo = !showInfo"
+>
+  Note: Prices shown are estimated
+</p>
+
+<!-- Tooltip popup (reusing showInfo) -->
+<transition name="fade">
+  <div
+    v-if="showInfo"
+    class="bg-white text-black text-sm p-3 rounded-lg shadow-lg border border-gray-300 mt-2 w-full"
+  >
+    <p class="font-semibold text-[#006989] mb-1">Product Info</p>
+    <p class="leading-snug">
+      Prices shown are estimated and based on price per meter.
+      Final cost will depend on the actual measurements taken by our staff during
+      <strong>on-site</strong> assessment.
+    </p>
+  </div>
+</transition>
 
         <p class="text-gray-900 text-sm mt-1 truncate-multiline">
           {{ orderStore.selectedProduct?.product_description }}

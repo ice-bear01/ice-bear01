@@ -11,12 +11,12 @@ const AboutRef = ref<HTMLElement | null>(null);
 const ContactRef = ref<HTMLElement | null>(null);
 
 const activeSection = ref('home');
-const isMenuOpen = ref(false); // control modal visibility
+const isMenuOpen = ref(false);
 
 const scrollTo = (section: HTMLElement | null) => {
   if (section) {
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    isMenuOpen.value = false; // close modal when navigating
+    isMenuOpen.value = false;
   }
 };
 
@@ -58,65 +58,72 @@ onBeforeUnmount(() => {
     <!-- Navbar -->
     <nav class="h-20 w-full flex justify-between items-center px-6 bg-gradient-to-r from-sky-100 to-white shadow-lg sticky top-0 z-50 rounded-b-2xl border-b border-sky-200">
       <!-- Logo -->
-      <div class="flex flex-row h-full items-center gap-2">
+      <div class="flex flex-row h-full items-center gap-2 cursor-pointer" @click="scrollTo(HomeRef)">
         <img :src="logo" alt="logo" class="h-[50px] rounded-2xl">
         <p class="font-bold text-xl sm:text-2xl text-[#006989] pr-5">3J's Glass & Aluminum Supply</p>
       </div>
 
       <!-- Desktop Navigation -->
       <div class="hidden md:flex h-full items-center justify-center gap-5">
+        
         <button @click="scrollTo(HomeRef)"
-          :class="[activeSection === 'home' ? 'text-[#006989]' : 'text-black', 'font-bold transition-colors duration-300']">
+          class="cursor-pointer font-bold transition-colors duration-300"
+          :class="[activeSection === 'home' ? 'text-[#006989]' : 'text-black']">
           Home
         </button>
 
         <button @click="scrollTo(AboutRef)"
-          :class="[activeSection === 'about' ? 'text-[#006989]' : 'text-black', 'font-bold transition-colors duration-300']">
+          class="cursor-pointer font-bold transition-colors duration-300"
+          :class="[activeSection === 'about' ? 'text-[#006989]' : 'text-black']">
           About
         </button>
 
         <button @click="scrollTo(ContactRef)"
-          :class="[activeSection === 'contact' ? 'text-[#006989]' : 'text-black', 'font-bold transition-colors duration-300']">
+          class="cursor-pointer font-bold transition-colors duration-300"
+          :class="[activeSection === 'contact' ? 'text-[#006989]' : 'text-black']">
           Contact Us
         </button>
 
         <div class="flex gap-2">
-          <button class="bg-gray-900 rounded px-4 py-1.5 text-white" @click="$router.push('/login')">Log-in</button>
-          <button class="font-bold border-1 rounded px-4 py-1.5" @click="$router.push('/signup')">Sign-up</button>
+          <button class="cursor-pointer bg-gray-900 rounded px-4 py-1.5 text-white" @click="$router.push('/login')">Log-in</button>
+          <button class="cursor-pointer font-bold border-1 rounded px-4 py-1.5" @click="$router.push('/signup')">Sign-up</button>
         </div>
       </div>
 
       <!-- Mobile Menu Icon -->
-      <button @click="isMenuOpen = true" class="md:hidden text-3xl text-[#006989]">
+      <button @click="isMenuOpen = true" class="cursor-pointer md:hidden text-3xl text-[#006989]">
         <i class="fa-solid fa-bars"></i>
       </button>
     </nav>
 
     <!-- Modal Menu (Mobile) -->
-    <div v-if="isMenuOpen"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+    <div v-if="isMenuOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
       <div class="bg-white w-80 rounded-2xl p-6 relative flex flex-col gap-4 shadow-xl">
+        
         <button @click="isMenuOpen = false"
-          class="absolute top-3 right-3 text-2xl text-gray-600 hover:text-[#006989]">
+          class="cursor-pointer absolute top-3 right-3 text-2xl text-gray-600 hover:text-[#006989]">
           <i class="fa-solid fa-xmark"></i>
         </button>
 
         <p class="text-center font-bold text-xl text-[#006989] mb-2">Menu</p>
 
-        <button @click="scrollTo(HomeRef)" class="py-2 text-lg font-semibold text-gray-800 hover:text-[#006989]">
+        <button @click="scrollTo(HomeRef)" class="cursor-pointer py-2 text-lg font-semibold text-gray-800 hover:text-[#006989]">
           Home
         </button>
-        <button @click="scrollTo(AboutRef)" class="py-2 text-lg font-semibold text-gray-800 hover:text-[#006989]">
+        <button @click="scrollTo(AboutRef)" class="cursor-pointer py-2 text-lg font-semibold text-gray-800 hover:text-[#006989]">
           About
         </button>
-        <button @click="scrollTo(ContactRef)" class="py-2 text-lg font-semibold text-gray-800 hover:text-[#006989]">
+        <button @click="scrollTo(ContactRef)" class="cursor-pointer py-2 text-lg font-semibold text-gray-800 hover:text-[#006989]">
           Contact Us
         </button>
+
         <hr>
-        <button @click="$router.push('/login')" class="bg-gray-900 text-white py-2 rounded-lg">Log-in</button>
-        <button @click="$router.push('/signup')" class="border border-[#006989] text-[#006989] py-2 rounded-lg font-bold">
+
+        <button @click="$router.push('/login')" class="cursor-pointer bg-gray-900 text-white py-2 rounded-lg">Log-in</button>
+        <button @click="$router.push('/signup')" class="cursor-pointer border border-[#006989] text-[#006989] py-2 rounded-lg font-bold">
           Sign-up
         </button>
+
       </div>
     </div>
 
@@ -136,6 +143,7 @@ onBeforeUnmount(() => {
     <!-- Footer -->
     <footer class="bg-gray-900 text-white py-10 border-t-4 border-[#006989] shadow-[inset_0_6px_0_#006989]">
       <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+        
         <div class="flex flex-col items-start">
           <h2 class="text-2xl font-bold text-[#006989] mb-2">Glass</h2>
           <p class="text-gray-300 max-w-sm">
@@ -149,7 +157,7 @@ onBeforeUnmount(() => {
             <ul class="space-y-2 text-gray-300">
               <li><i class="fa-solid fa-envelope text-[#006989] mr-2"></i> support@glassdesigns.com</li>
               <li><i class="fa-solid fa-phone text-[#006989] mr-2"></i> +63 912 345 6789</li>
-              <li><i class="fa-solid fa-location-dot text-[#006989] mr-2"></i> Makati City, PH</li>
+              <li><i class="fa-solid fa-location-dot text-[#006989] mr-2"></i>Zone-5, Bulan, Sorsogon, PH</li>
             </ul>
           </div>
         </div>
@@ -157,12 +165,13 @@ onBeforeUnmount(() => {
         <div class="flex flex-col items-start">
           <h3 class="font-semibold text-[#006989] mb-3">Follow Us</h3>
           <div class="flex gap-4">
-            <a href="#" class="hover:text-[#006989] transition-colors text-xl"><i class="fa-brands fa-facebook"></i></a>
-            <a href="#" class="hover:text-[#006989] transition-colors text-xl"><i class="fa-brands fa-instagram"></i></a>
-            <a href="#" class="hover:text-[#006989] transition-colors text-xl"><i class="fa-brands fa-twitter"></i></a>
-            <a href="#" class="hover:text-[#006989] transition-colors text-xl"><i class="fa-brands fa-linkedin"></i></a>
+            <a href="#" class="cursor-pointer hover:text-[#006989] transition-colors text-xl"><i class="fa-brands fa-facebook"></i></a>
+            <a href="#" class="cursor-pointer hover:text-[#006989] transition-colors text-xl"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" class="cursor-pointer hover:text-[#006989] transition-colors text-xl"><i class="fa-brands fa-twitter"></i></a>
+            <a href="#" class="cursor-pointer hover:text-[#006989] transition-colors text-xl"><i class="fa-brands fa-linkedin"></i></a>
           </div>
         </div>
+
       </div>
 
       <div class="text-center mt-10 text-gray-400 text-sm border-t border-[#006989]/40 pt-6">

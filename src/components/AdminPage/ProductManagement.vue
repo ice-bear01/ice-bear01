@@ -276,7 +276,7 @@ const handleConfirm = async () => {
     <!-- Message Modal -->
     <div
       v-if="showMessageModal"
-      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
+      class="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
       <div class="bg-gray-800 text-white p-6 rounded-xl w-80 shadow-lg text-center">
         <p class="text-sm mb-4">{{ modalMessage }}</p>
         <button

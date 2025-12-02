@@ -54,7 +54,7 @@ import logo from "@/assets/img/logo.jpg";
             { value: '2,500+', label: 'Projects Completed' },
             { value: '98%', label: 'Customer Satisfaction' },
             { value: '15+', label: 'Years Experience' },
-            { value: '50+', label: 'Team Members' },
+            { value: '10+', label: 'Team Members' },
           ]"
           :key="index"
           class="h-[140px] w-[200px] sm:w-[240px] md:w-[260px] bg-[#006989] rounded-2xl text-white flex flex-col items-center justify-center gap-2 shadow-lg"

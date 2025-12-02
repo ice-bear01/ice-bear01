@@ -33,6 +33,7 @@ interface OrderLog {
   product_price: number;
   quantity: number;
   status: string;
+  reject_reason?: string;
   delivery_address: DeliveryAddress;
 }
 
@@ -50,16 +51,16 @@ const modalTitle = ref("");
 const confirmAction = ref<null | (() => Promise<void>)>(null);
 const isConfirming = ref(false);
 
+const openMessageModal = (message: string) => {
+  modalMessage.value = message;
+  showMessageModal.value = true;
+};
+
 const openConfirmModal = (title: string, message: string, action: () => Promise<void>) => {
   modalTitle.value = title;
   modalMessage.value = message;
   confirmAction.value = action;
   showConfirmModal.value = true;
-};
-
-const openMessageModal = (message: string) => {
-  modalMessage.value = message;
-  showMessageModal.value = true;
 };
 
 const handleConfirm = async () => {
@@ -122,6 +123,25 @@ const filteredLogs = computed(() => {
 });
 
 // ----------------- Actions -----------------
+
+const updatePrice = async (order: Order) => {
+  try {
+    loading.show();
+    await axios.put(`${backend}/orders/update-price/${order.order_id}`, { 
+      product_price: order.product_price // match backend
+    });
+    openMessageModal(`Order ${order.order_id} price updated`);
+    fetchOrderLogs();
+  } catch (err: any) {
+    console.error(err.response?.data || err.message);
+    openMessageModal("Failed to update price");
+  } finally {
+    loading.hide();
+  }
+};
+
+
+
 const approveOrFinishOrder = async (order: Order) => {
   if (["installed/shipped", "rejected"].includes(order.status.toLowerCase())) return;
   order.actionLoading = true;
@@ -142,62 +162,34 @@ const approveOrFinishOrder = async (order: Order) => {
   }
 };
 
-const rejectOrder = async (order: Order) => {
-  if (order.status.toLowerCase() === "rejected") return;
-  order.actionLoading = true;
-
+// --------------- DELETE ORDER (NOW WITH MODAL) ----------------
+const deleteOrder = async (order: Order) => {
   try {
     loading.show();
-    await axios.put(`${backend}/orders/reject-order/${order.order_id}`);
-    order.status = "rejected";
+
+    await axios.delete(`${backend}/orders/${order.order_id}`);
+
+    orders.value = orders.value.filter(o => o.order_id !== order.order_id);
     fetchOrderLogs();
-    openMessageModal(`Order ${order.order_id} has been rejected`);
+
+    openMessageModal(`Order ${order.order_id} deleted successfully.`);
   } catch (err) {
     console.error(err);
-    openMessageModal("Failed to reject order");
+    openMessageModal("Failed to delete order.");
   } finally {
-    order.actionLoading = false;
     loading.hide();
   }
 };
 
-const deleteOrder = async (order: Order) => {
+// Wrapper that opens modal
+const askDeleteOrder = (order: Order) => {
   openConfirmModal(
     "Delete Order",
-    `Are you sure you want to delete order ${order.order_id}?`,
+    `Are you sure you want to delete Order #${order.order_id}? This action cannot be undone.`,
     async () => {
-      order.actionLoading = true;
-      try {
-        loading.show();
-        await axios.delete(`${backend}/orders/${order.order_id}`);
-        orders.value = orders.value.filter(o => o.order_id !== order.order_id);
-        fetchOrderLogs();
-        openMessageModal(`Order ${order.order_id} deleted successfully`);
-      } catch (err) {
-        console.error(err);
-        openMessageModal("Failed to delete order");
-      } finally {
-        order.actionLoading = false;
-        loading.hide();
-      }
+      await deleteOrder(order);
     }
   );
-};
-
-const updatePrice = async (order: Order) => {
-  try {
-    loading.show();
-    await axios.put(`${backend}/orders/update-price/${order.order_id}`, {
-      product_price: order.product_price,
-    });
-    fetchOrderLogs();
-    openMessageModal(`Price updated successfully for order ${order.order_id}`);
-  } catch (err) {
-    console.error(err);
-    openMessageModal("Failed to update price");
-  } finally {
-    loading.hide();
-  }
 };
 
 // ----------------- Helper -----------------
@@ -210,11 +202,50 @@ const formatAddress = (address: DeliveryAddress) => {
 const toggleLogs = () => {
   showLogs.value = !showLogs.value;
 };
+const showRejectModal = ref(false);
+const rejectReason = ref("");
+const currentRejectOrder = ref<Order | null>(null);
+
+// Open reject modal for a specific order
+const openRejectModal = (order: Order) => {
+  currentRejectOrder.value = order;
+  rejectReason.value = "";
+  showRejectModal.value = true;
+};
+
+// Confirm reject with reason
+const confirmRejectOrder = async () => {
+  if (!currentRejectOrder.value) return;
+
+  if (!rejectReason.value.trim()) {
+    openMessageModal("Please provide a reason for rejecting the order.");
+    return;
+  }
+
+  currentRejectOrder.value.actionLoading = true;
+  showRejectModal.value = false;
+  loading.show();
+
+  try {
+    await axios.put(`${backend}/orders/reject-order/${currentRejectOrder.value.order_id}`, {
+      reason: rejectReason.value.trim()
+    });
+    currentRejectOrder.value.status = "rejected";
+    openMessageModal(`Order ${currentRejectOrder.value.order_id} has been rejected`);
+    fetchOrderLogs();
+  } catch (err) {
+    console.error(err);
+    openMessageModal("Failed to reject order.");
+  } finally {
+    currentRejectOrder.value.actionLoading = false;
+    loading.hide();
+  }
+};
 </script>
 
 <template>
   <div class="p-4 bg-gray-900 rounded-xl shadow-lg h-screen overflow-y-auto mb-5">
-    <!-- Search & Toggle Logs Button -->
+    <!-- Search & Toggle Logs -->
     <div class="flex flex-col sm:flex-row justify-between items-center mb-4 sticky top-0 z-50 py-2 px-2 shadow rounded-lg gap-2">
       <input
         v-model="search"
@@ -253,8 +284,8 @@ const toggleLogs = () => {
           >
             <td class="py-1 px-2 text-center">{{ order.order_id }}</td>
             <td class="py-1 px-2 text-center">{{ order.product_id }}</td>
-            <td class="py-1 px-2 text-center max-w-[120px] truncate" :title="order.user_email">{{ order.user_email }}</td>
-            <td class="py-1 px-2 text-center max-w-[160px] truncate" :title="formatAddress(order.delivery_address)">{{ formatAddress(order.delivery_address) }}</td>
+            <td class="py-1 px-2 text-center truncate max-w-[120px]" :title="order.user_email">{{ order.user_email }}</td>
+            <td class="py-1 px-2 text-center truncate max-w-[160px]" :title="formatAddress(order.delivery_address)">{{ formatAddress(order.delivery_address) }}</td>
             <td class="py-1 px-2 text-center">
               <div v-if="order.status.toLowerCase() === 'processing'" class="flex items-center justify-center gap-2">
                 <input
@@ -273,6 +304,7 @@ const toggleLogs = () => {
                 ₱{{ order.product_price }}
               </div>
             </td>
+
             <td class="py-1 px-2 text-center">{{ order.quantity }}</td>
             <td class="py-1 px-2 text-center capitalize font-medium">
               <span
@@ -286,45 +318,60 @@ const toggleLogs = () => {
                 {{ order.status }}
               </span>
             </td>
-            <td class="py-1 px-2 text-center flex flex-col sm:flex-row gap-1 justify-center items-center">
-              <button
-                @click="approveOrFinishOrder(order)"
-                :disabled="order.actionLoading || ['installed/shipped','rejected'].includes(order.status.toLowerCase())"
-                class="w-20 h-8 flex items-center justify-center rounded-md font-semibold text-white transition hover:scale-105"
-                :class="order.status.toLowerCase() === 'pending' ? 'bg-blue-600 hover:bg-blue-500' :
-                        order.status.toLowerCase() === 'processing' ? 'bg-yellow-600 hover:bg-yellow-500' :
-                        'bg-gray-600 cursor-default'">
-                {{
-                  order.status.toLowerCase() === 'pending' ? 'Approve' :
-                  order.status.toLowerCase() === 'processing' ? 'Finish' :
-                  order.status.toLowerCase() === 'installed/shipped' ? 'Completed' : 'Rejected'
-                }}
-              </button>
 
-              <button
-                v-if="order.status.toLowerCase() !== 'installed/shipped'"
-                @click="rejectOrder(order)"
-                :disabled="order.actionLoading || order.status.toLowerCase() === 'rejected'"
-                class="w-20 h-8 flex items-center justify-center rounded-md bg-red-600 hover:bg-red-500 text-white font-semibold transition hover:scale-105">
-                Reject
-              </button>
+            <!-- ACTION BUTTONS -->
+<!-- ACTION BUTTONS -->
+<td class="py-1 px-2 text-center">
+  <div class="flex justify-end items-center gap-2">
 
-              <button
-                @click="deleteOrder(order)"
-                :disabled="order.actionLoading"
-                class="w-10 h-8 flex items-center justify-center rounded-md bg-gray-700 hover:bg-gray-600 text-white transition hover:scale-105">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </td>
+    <!-- Approve / Finish -->
+    <button
+      v-if="!['installed/shipped','rejected'].includes(order.status.toLowerCase())"
+      @click="approveOrFinishOrder(order)"
+      :disabled="order.actionLoading"
+      class="w-20 h-8 flex items-center justify-center rounded-md font-semibold text-white transition hover:scale-105"
+      :class="order.status.toLowerCase() === 'pending' ? 'bg-blue-600 hover:bg-blue-500' :
+              order.status.toLowerCase() === 'processing' ? 'bg-yellow-600 hover:bg-yellow-500' :
+              'bg-gray-600 cursor-default'">
+      {{
+        order.status.toLowerCase() === 'pending' ? 'Approve' :
+        order.status.toLowerCase() === 'processing' ? 'Finish' :
+        ''
+      }}
+    </button>
+
+<button
+  v-if="!['installed/shipped','rejected'].includes(order.status.toLowerCase())"
+  @click="openRejectModal(order)"
+  :disabled="order.actionLoading"
+  class="w-20 h-8 flex items-center justify-center rounded-md bg-red-600 hover:bg-red-500 text-white font-semibold transition hover:scale-105"
+>
+  Reject
+</button>
+
+
+    <!-- Delete -->
+    <button
+      @click="askDeleteOrder(order)"
+      :disabled="order.actionLoading"
+      class="w-10 h-8 flex items-center justify-center rounded-md bg-gray-700 hover:bg-gray-600 text-white transition hover:scale-105"
+    >
+      <i class="fa-solid fa-trash"></i>
+    </button>
+
+  </div>
+</td>
+
           </tr>
         </tbody>
       </table>
+
       <div v-if="filteredOrders.length === 0" class="text-center py-4 text-gray-400">
         No orders found.
       </div>
     </div>
 
-    <!-- Order Logs Table -->
+    <!-- Order Logs -->
     <div class="overflow-x-hidden" v-else>
       <table class="min-w-full text-gray-200 text-sm border-separate border-spacing-y-1">
         <thead class="bg-[#1f2937] text-gray-100 uppercase">
@@ -336,8 +383,10 @@ const toggleLogs = () => {
             <th class="py-2 px-2 text-center">Price</th>
             <th class="py-2 px-2 text-center">Quantity</th>
             <th class="py-2 px-2 text-center">Status</th>
+            <th class="py-2 px-2 text-center">Reject Reason</th>
           </tr>
         </thead>
+
         <tbody>
           <tr
             v-for="log in filteredLogs"
@@ -346,23 +395,45 @@ const toggleLogs = () => {
           >
             <td class="py-1 px-2 text-center">{{ log.order_id }}</td>
             <td class="py-1 px-2 text-center">{{ log.product_name }}</td>
-            <td class="py-1 px-2 text-center max-w-[120px] truncate" :title="log.user_email">{{ log.user_email }}</td>
-            <td class="py-1 px-2 text-center max-w-[160px] truncate" :title="formatAddress(log.delivery_address)">{{ formatAddress(log.delivery_address) }}</td>
+            <td class="py-1 px-2 text-center truncate max-w-[120px]" :title="log.user_email">{{ log.user_email }}</td>
+            <td class="py-1 px-2 text-center truncate max-w-[160px]" :title="formatAddress(log.delivery_address)">{{ formatAddress(log.delivery_address) }}</td>
             <td class="py-1 px-2 text-center">₱{{ log.product_price }}</td>
             <td class="py-1 px-2 text-center">{{ log.quantity }}</td>
-            <td class="py-1 px-2 text-center capitalize font-medium">{{ log.status }}</td>
+            <td class="py-1 px-2 text-center">{{ log.status }}</td>
+            <td class="py-1 px-2 text-center">{{ log.reject_reason || '-' }}</td>
           </tr>
         </tbody>
       </table>
+
       <div v-if="filteredLogs.length === 0" class="text-center py-4 text-gray-400">
         No logs found.
       </div>
     </div>
+    <!-- Reject Reason Modal -->
+<div v-if="showRejectModal" class="fixed inset-0 flex items-center justify-center bg-black/60 z-50 p-4">
+  <div class="bg-gray-800 text-white p-6 rounded-xl w-full max-w-md shadow-lg">
+    <h2 class="text-lg font-bold mb-2">Reject Order #{{ currentRejectOrder?.order_id }}</h2>
+    <p class="text-sm text-gray-300 mb-4">Please provide a reason for rejecting this order:</p>
+    <textarea v-model="rejectReason"
+      placeholder="Enter reason..."
+      rows="4"
+      class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-red-500 focus:outline-none mb-4"></textarea>
 
-    <!-- Confirmation Modal -->
-    <div
-      v-if="showConfirmModal"
-      class="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+    <div class="flex justify-end gap-3">
+      <button @click="showRejectModal = false"
+        class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-md">
+        Cancel
+      </button>
+      <button @click="confirmRejectOrder"
+        class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-md font-semibold">
+        Reject
+      </button>
+    </div>
+  </div>
+</div>
+
+    <!-- Confirm Modal -->
+    <div v-if="showConfirmModal" class="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
       <div class="bg-gray-800 text-white p-6 rounded-xl w-80 shadow-lg text-center">
         <h2 class="text-lg font-bold mb-2">{{ modalTitle }}</h2>
         <p class="text-sm text-gray-300 mb-4">{{ modalMessage }}</p>
@@ -383,9 +454,7 @@ const toggleLogs = () => {
     </div>
 
     <!-- Message Modal -->
-    <div
-      v-if="showMessageModal"
-      class="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+    <div v-if="showMessageModal" class="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
       <div class="bg-gray-800 text-white p-6 rounded-xl w-80 shadow-lg text-center">
         <p class="text-sm mb-4">{{ modalMessage }}</p>
         <button
@@ -395,5 +464,6 @@ const toggleLogs = () => {
         </button>
       </div>
     </div>
+
   </div>
 </template>

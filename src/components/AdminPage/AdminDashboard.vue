@@ -12,6 +12,7 @@ const navItems = [
   { name: "Product Management", path: "/admin/product-management" },
   { name: "Order Management Panel", path: "/admin/order-management" },
   { name: "Recent Activities", path: "/admin/recent-activities" },
+  { name: "User Management", path: "/admin/user-management" },
   { name: "View Feedback", path: "/admin/view-feedback" },
 ];
 
@@ -102,14 +103,15 @@ onMounted(() => {
           class="relative group"
         >
           <button
-            @click="goTo(item.path)"
-            class="font-bold border transition-colors duration-200 py-2 px-4 rounded truncate max-w-[150px]"
-            :class="[route.path === item.path
-              ? 'border-[#006989] text-[#006989]'
-              : 'border-transparent hover:border-[#006989]']"
-          >
-            {{ item.name }}
-          </button>
+  @click="goTo(item.path)"
+  class="font-bold border transition-colors duration-200 py-2 px-4 rounded max-w-[150px] whitespace-normal break-words text-center"
+  :class="[route.path === item.path
+    ? 'border-[#006989] text-[#006989]'
+    : 'border-transparent hover:border-[#006989]']"
+>
+  {{ item.name }}
+</button>
+
 
           <!-- Tooltip -->
           <span
@@ -121,7 +123,7 @@ onMounted(() => {
       </div>
 
       <!-- Router View -->
-      <div class="w-full h-full">
+      <div class="w-full min-h-screen">
         <router-view />
       </div>
     </div>

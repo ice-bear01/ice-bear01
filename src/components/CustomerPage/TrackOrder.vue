@@ -22,9 +22,16 @@ interface OrderResponse {
   quantity: number;
   total_price: number;
   delivery_address?: DeliveryAddress;
+  reject_reason?: string; // optional reject reason
 }
 
-const backend = import.meta.env.VITE_BACKEND_URL
+interface OrderLogResponse {
+  order_id: number;
+  status: string;
+  reject_reason?: string;
+}
+
+const backend = import.meta.env.VITE_BACKEND_URL;
 const orders = ref<OrderResponse[]>([]);
 const loading = ref(false);
 const error = ref('');
@@ -34,10 +41,26 @@ const fetchOrders = async () => {
   error.value = '';
 
   try {
-    const response = await axios.get<OrderResponse[]>(`${backend}/orders/`, {
+    // Fetch normal orders
+    const ordersRes = await axios.get<OrderResponse[]>(`${backend}/orders/`, {
       withCredentials: true,
     });
-    orders.value = response.data;
+
+    // Fetch order logs to get reject reasons
+    const logsRes = await axios.get<OrderLogResponse[]>(`${backend}/orders/order-log`, {
+      withCredentials: true,
+    });
+
+    // Merge reject reason into orders (if status is rejected)
+    orders.value = ordersRes.data.map(order => {
+      const log = logsRes.data.find(
+        l => l.order_id === order.order_id && l.status.toLowerCase() === 'rejected'
+      );
+      return {
+        ...order,
+        reject_reason: log?.reject_reason
+      };
+    });
   } catch (err: any) {
     console.error(err);
     error.value = 'Failed to fetch orders.';
@@ -50,6 +73,7 @@ onMounted(() => {
   fetchOrders();
 });
 
+// Keep the color red for rejected
 const statusColor = (status: string) => {
   const s = status.toLowerCase();
   if (s === 'pending') return 'text-orange-400 border-orange-400';
@@ -70,7 +94,6 @@ const statusColor = (status: string) => {
     <div v-if="orders.length === 0 && !loading" class="text-white/70">No orders found.</div>
 
     <div class="flex flex-col gap-6 sm:px-15">
-
       <div
         v-for="order in orders"
         :key="order.order_id"
@@ -105,11 +128,15 @@ const statusColor = (status: string) => {
               <i class="fas fa-calendar-alt"></i> {{ new Date(order.created_at).toLocaleString() }}
             </p>
 
+            <!-- Status with reject reason inline -->
             <p class="flex items-center gap-2 mt-2 text-gray-800">
               <i class="fas fa-truck" :class="statusColor(order.status)"></i>
               <span class="font-medium">Status:</span>
               <span :class="['px-3 py-1 rounded-full text-sm font-semibold border', statusColor(order.status)]">
                 {{ order.status }}
+              </span>
+              <span v-if="order.reject_reason" class="ml-2 font-medium text-red-600">
+                (Reason: {{ order.reject_reason }})
               </span>
             </p>
           </div>

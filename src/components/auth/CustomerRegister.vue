@@ -7,7 +7,7 @@ import { useLoadingStore } from '@/store/loading'
 const backend = import.meta.env.VITE_BACKEND_URL
 
 const loading = useLoadingStore()
-
+const errormessage = ref(false);
 // --------------------
 // Step tracking
 // --------------------
@@ -92,6 +92,7 @@ const verifyCode = async () => {
       email: email.value,
       code: verificationCode.value,
     })
+   
 
     if (verify) {
       await axios.post(
@@ -101,9 +102,24 @@ const verifyCode = async () => {
       )
       router.push('/dashboard/home')
     }
-  } catch (error) {
-    console.error('Verification failed:', error)
-  } finally {
+  } catch (error: unknown) {
+  if (axios.isAxiosError(error)) {
+    if (error.response) {
+      const status = error.response.status
+
+      if (status === 400) {
+        errormessage.value = true;
+        console.error("Bad Request 400:", error.response.data)
+        setTimeout(()=>{
+          errormessage.value = false;
+        },4000)
+      }
+    }
+  } else {
+    console.error("Unexpected error:", error)
+  }
+}
+ finally {
     verifyingCode.value = false
     loading.hide()
   }
@@ -210,7 +226,7 @@ const verifyCode = async () => {
               Back
             </button>
           </div>
-
+          <p v-if="errormessage" class="text-red-400">Email Already Exist</p>
           <button
             @click.prevent="verifyCode"
             class="bg-[#00c1d4] hover:bg-[#00a4b5] text-white font-bold py-2 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"

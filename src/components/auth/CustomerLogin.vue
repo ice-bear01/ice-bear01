@@ -10,6 +10,9 @@ const loading = useLoadingStore()
 const email = ref<string>('')
 const password = ref<string>('')
 
+// Error message for login (banned or invalid)
+const loginError = ref('')
+
 // Forgot Password States
 const showForgotModal = ref(false)
 const forgotEmail = ref('')
@@ -22,17 +25,25 @@ const sendingCode = ref(false)
 const toLogin = async () => {
   try {
     loading.show()
+    loginError.value = '' // reset error
     const login = await axios.post(
       `${backend}/users/auth/login`,
       { email: email.value, password: password.value },
       { withCredentials: true }
     )
     if (login) router.push('/dashboard')
-  } catch (err) {
-    console.error(err)
+  } catch (err: any) {
+    if (err.response && err.response.status === 403) {
+      loginError.value = 'Your account is banned. Contact admin.'
+      setTimeout(()=>{
+        loginError.value = '';
+      },5000)
+    } else if (err.response && err.response.status === 401) {
+      loginError.value = 'Invalid email or password.'
+    } else {
+      loginError.value = 'Something went wrong. Please try again.'
+    }
   } finally {
-    email.value = ''
-    password.value = ''
     loading.hide()
   }
 }
@@ -129,6 +140,9 @@ const changePassword = async () => {
             class="bg-white/10 border border-white/30 rounded-xl px-4 py-2 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#00c1d4]"
             required
           />
+          <!-- Login error message -->
+          <p v-if="loginError" class="text-red-500 text-sm mt-1">{{ loginError }}</p>
+
           <button
             type="button"
             @click="showForgotModal = true"

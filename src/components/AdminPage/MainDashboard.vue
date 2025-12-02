@@ -1,4 +1,5 @@
 <script setup>
+import logo from "@/assets/img/logo.jpg"; // replace with your actual image file name
 import { ref, onMounted } from "vue"
 import axios from "axios"
 import VueApexCharts from "vue3-apexcharts"
@@ -69,6 +70,13 @@ const fetchDashboardData = async () => {
     const res = await axios.get(`${backend}/orders/dashboard-data`)
     const data = res.data
 
+    const resCustomers = await axios.get(`${backend}/users/new-customer-count`)
+    newCustomers.value = resCustomers.data.today_new_customers || 0
+
+    const resPending = await axios.get(`${backend}/orders/pending-orders-count`);
+    pendingOrders.value = resPending.data.pending_count || 0;
+
+
     const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     const dayMap = { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 }
     const salesMap = {}
@@ -125,109 +133,164 @@ const generateReport = async () => {
       return
     }
 
-    // ---------------- PDF Setup ----------------
-    const pdf = new jsPDF("p", "mm", "a4")
-    const pageWidth = pdf.internal.pageSize.getWidth()
+    // ---------------- PDF Setup ----------------(johnpaulgmail)
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
 
-    // Header Banner
-    pdf.setFillColor(31, 41, 55) // dark gray
-    pdf.rect(0, 0, 210, 30, "F")
-    pdf.setTextColor(255, 255, 255)
-    pdf.setFont("helvetica", "bold")
-    pdf.setFontSize(20)
-    pdf.text("Glass & Aluminum Company", pageWidth / 2, 17, { align: "center" })
-    pdf.setFont("helvetica", "normal")
-    pdf.setFontSize(12)
-    pdf.text(`Sales Report (${startDate.value} - ${endDate.value})`, pageWidth / 2, 25, { align: "center" })
+    // ---------------- Header with Logo ----------------
+const imgWidth = 20;  // width of logo in mm
+const imgHeight = 20; // height of logo in mm
+const startX = 14;    // left margin for logo
+const startY = 7;     // top margin for logo
 
-    // Add generation date
-    const now = new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" })
-    pdf.setFontSize(10)
-    pdf.setTextColor(100)
-    pdf.text(`Generated on: ${now}`, 14, 38)
+// Add logo on the top-left
+pdf.addImage(logo, "PNG", startX, startY, imgWidth, imgHeight);
+
+// Add shop name beside logo
+pdf.setTextColor(0, 0, 0);
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(20);
+const shopNameX = startX + imgWidth + 5; // 5mm padding from logo
+const shopNameY = startY + imgHeight / 3 + 5; // vertically center with logo
+pdf.text("3J's Glass & Aluminum Shop", shopNameX, shopNameY);
+
+// Add subtitle aligned with shop name
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(12);
+const subtitleY = shopNameY + 8; // 8mm below shop name
+pdf.text(`Sales Report (${startDate.value} - ${endDate.value})`, shopNameX, subtitleY);
+
+
+    // Timestamp
+    const now = new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" });
+    pdf.setFontSize(10);
+    pdf.setTextColor(100);
+    pdf.text(`Generated on: ${now}`, 14, 38);
 
     // ---------------- Summary ----------------
-    const totalOrders = data.reduce((sum, row) => sum + Number(row.product_quantity), 0)
-    const totalSales = data.reduce((sum, row) => sum + Number(row.product_price) * Number(row.product_quantity), 0)
+    const totalOrders = data.reduce((sum, row) => sum + Number(row.product_quantity), 0);
+    const totalSales = data.reduce(
+      (sum, row) => sum + Number(row.product_price) * Number(row.product_quantity),
+      0
+    );
 
-    pdf.setTextColor(0)
-    pdf.setFont("helvetica", "bold")
-    pdf.setFontSize(14)
-    pdf.text("Sales Summary", 14, 50)
+    pdf.setTextColor(0);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(14);
+    pdf.text("Sales Summary", 14, 50);
 
-    pdf.setFont("helvetica", "normal")
-    pdf.setFontSize(12)
-    pdf.text(`Total Orders: ${totalOrders}`, 14, 58)
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(12);
+    pdf.text(`Total Orders: ${totalOrders}`, 14, 58);
     pdf.text(
-      `Total Sales: PHP ${totalSales.toLocaleString("en-PH", {
-        minimumFractionDigits: 2,
-      })}`,
+      `Total Sales: PHP ${totalSales.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`,
       14,
       66
-    )
+    );
 
-    // ---------------- Table Header ----------------
-    let y = 80
-    pdf.setFont("helvetica", "bold")
-    pdf.setFillColor(243, 244, 246) // light gray header
-    pdf.rect(10, y - 6, 190, 10, "F")
+    // ---------------- Table Setup ----------------
+    let y = 80;
 
-    pdf.text("No.", 14, y)
-    pdf.text("Product", 30, y)
-    pdf.text("Category", 95, y)
-    pdf.text("Qty", 135, y, { align: "right" })
-    pdf.text("Price", 165, y, { align: "right" })
-    pdf.text("Total", 200, y, { align: "right" })
-    y += 6
+    const col = {
+      no: 15,
+      product: 60,
+      category: 40,
+      qty: 20,
+      price: 30,
+      total: 30,
+    };
+
+    const x = 10;
+
+    // ---------------- Draw Table Header ----------------
+    function drawTableHeader(startY) {
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(0);
+      pdf.setLineWidth(0.2);
+
+      pdf.rect(x, startY, 190, 10);
+
+      pdf.line(x + col.no, startY, x + col.no, startY + 10);
+      pdf.line(x + col.no + col.product, startY, x + col.no + col.product, startY + 10);
+      pdf.line(x + col.no + col.product + col.category, startY, x + col.no + col.product + col.category, startY + 10);
+      pdf.line(x + col.no + col.product + col.category + col.qty, startY, x + col.no + col.product + col.category + col.qty, startY + 10);
+      pdf.line(x + col.no + col.product + col.category + col.qty + col.price, startY, x + col.no + col.product + col.category + col.qty + col.price, startY + 10);
+
+      pdf.text("No.", x + 5, startY + 7);
+      pdf.text("Product", x + col.no + 5, startY + 7);
+      pdf.text("Category", x + col.no + col.product + 5, startY + 7);
+      pdf.text("Qty", x + col.no + col.product + col.category + 5, startY + 7);
+      pdf.text("Price", x + col.no + col.product + col.category + col.qty + 5, startY + 7);
+      pdf.text("Total", x + col.no + col.product + col.category + col.qty + col.price + 5, startY + 7);
+
+      return startY + 10;
+    }
+
+    y = drawTableHeader(y);
 
     // ---------------- Table Rows ----------------
-    pdf.setFont("helvetica", "normal")
+    pdf.setFont("helvetica", "normal");
+
     data.forEach((item, index) => {
-      if (y > 270) {
-        pdf.addPage()
-        y = 20
-        pdf.setFont("helvetica", "bold")
-        pdf.text("No.", 14, y)
-        pdf.text("Product", 30, y)
-        pdf.text("Category", 95, y)
-        pdf.text("Qty", 135, y, { align: "right" })
-        pdf.text("Price", 165, y, { align: "right" })
-        pdf.text("Total", 200, y, { align: "right" })
-        y += 6
-        pdf.setFont("helvetica", "normal")
+      if (y > 260) {
+        pdf.addPage();
+        y = 20;
+        y = drawTableHeader(y);
       }
 
-      const total = item.product_price * item.product_quantity
+      const total = Number(item.product_price) * Number(item.product_quantity);
 
-      pdf.text(String(index + 1), 14, y)
-      pdf.text(item.product_name, 30, y)
-      pdf.text(item.product_category, 95, y)
-      pdf.text(String(item.product_quantity), 135, y, { align: "right" })
-      pdf.text(
-        `PHP ${Number(item.product_price).toFixed(2)}`,
-        165,
-        y,
-        { align: "right" }
-      )
-      pdf.text(
+      // WRAPPED TEXTS
+      const productText = pdf.splitTextToSize(item.product_name, col.product - 8);
+      const categoryText = pdf.splitTextToSize(item.product_category, col.category - 8);
+      const qtyText = String(item.product_quantity);
+      const priceText = pdf.splitTextToSize(`PHP ${Number(item.product_price).toFixed(2)}`, col.price - 8);
+      const totalText = pdf.splitTextToSize(
         `PHP ${total.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`,
-        200,
-        y,
-        { align: "right" }
-      )
+        col.total - 8
+      );
 
-      y += 8
-    })
+      // Calculate row height based on wrapped lines
+      const lineCount = Math.max(
+        productText.length,
+        categoryText.length,
+        priceText.length,
+        totalText.length
+      );
 
+      const rowHeight = Math.max(10, lineCount * 6);
+
+      // Row outline
+      pdf.rect(x, y, 190, rowHeight);
+
+      // Vertical lines
+      pdf.line(x + col.no, y, x + col.no, y + rowHeight);
+      pdf.line(x + col.no + col.product, y, x + col.no + col.product, y + rowHeight);
+      pdf.line(x + col.no + col.product + col.category, y, x + col.no + col.product + col.category, y + rowHeight);
+      pdf.line(x + col.no + col.product + col.category + col.qty, y, x + col.no + col.product + col.category + col.qty, y + rowHeight);
+      pdf.line(x + col.no + col.product + col.category + col.qty + col.price, y, x + col.no + col.product + col.category + col.qty + col.price, y + rowHeight);
+
+      // Insert text
+      pdf.text(String(index + 1), x + 5, y + 6);
+      pdf.text(productText, x + col.no + 5, y + 6);
+      pdf.text(categoryText, x + col.no + col.product + 5, y + 6);
+      pdf.text(qtyText, x + col.no + col.product + col.category + 5, y + 6);
+      pdf.text(priceText, x + col.no + col.product + col.category + col.qty + 5, y + 6);
+      pdf.text(totalText, x + col.no + col.product + col.category + col.qty + col.price + 5, y + 6);
+
+      y += rowHeight;
+    });
 
     // ---------------- Footer ----------------
-    const totalPages = pdf.internal.getNumberOfPages()
+    const totalPages = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
-      pdf.setPage(i)
-      pdf.setFontSize(10)
-      pdf.setTextColor(150)
-      pdf.text(`Page ${i} of ${totalPages}`, pageWidth - 30, 290)
+      pdf.setPage(i);
+      pdf.setFontSize(10);
+      pdf.setTextColor(150);
+      pdf.text(`Page ${i} of ${totalPages}`, pageWidth - 30, 290);
     }
+    //----------------------------johnpaulgmail til here-----------------
+
 
     // ---------------- Save ----------------
     pdf.save(`Dashboard_Report_${startDate.value}_to_${endDate.value}.pdf`)
@@ -264,17 +327,17 @@ onMounted(() => {
             class="bg-gray-800 text-white rounded-md px-3 py-2 border border-gray-700 focus:ring-2 focus:ring-emerald-500" />
         </div>
 
-<div class="relative flex flex-col mt-6">
-  <p v-if="dateErrorMessage" 
-     class="absolute -top-6 left-0 text-red-500 font-semibold text-sm transition-opacity duration-300">
-    {{ dateErrorMessage }}
-  </p>
+        <div class="relative flex flex-col mt-6">
+          <p v-if="dateErrorMessage"
+            class="absolute -top-6 left-0 text-red-500 font-semibold text-sm transition-opacity duration-300">
+            {{ dateErrorMessage }}
+          </p>
 
-  <button @click="generateReport"
-          class="bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition-all duration-200">
-    🧾 Generate PDF Report
-  </button>
-</div>
+          <button @click="generateReport"
+            class="bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition-all duration-200">
+            🧾 Generate PDF Report
+          </button>
+        </div>
 
 
       </div>

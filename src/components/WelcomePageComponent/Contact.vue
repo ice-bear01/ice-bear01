@@ -16,7 +16,8 @@
       <div
         class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[ -10px_0_15px_#006989 ] p-6 flex flex-col items-center text-center transition-all duration-500 hover:scale-105 hover:shadow-[0_0_25px_#006989]"
       >
-        <i class="fa-solid fa-envelope text-4xl text-[#006989] mb-3"></i>
+        <i class="fa-solid fa-envelope text-4xl text-[#00B8D4] bg-white/20 p-4 rounded-full shadow-inner mb-3 transition-all duration-300 hover:bg-[#00B8D4]/30 hover:text-white"></i>
+
         <h3 class="font-bold text-xl mb-1">Email</h3>
         <p class="text-gray-200">support@glassdesigns.com</p>
       </div>
@@ -25,7 +26,7 @@
       <div
         class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[ -10px_0_15px_#006989 ] p-6 flex flex-col items-center text-center transition-all duration-500 hover:scale-105 hover:shadow-[0_0_25px_#006989]"
       >
-        <i class="fa-solid fa-phone text-4xl text-[#006989] mb-3"></i>
+        <i class="fa-solid fa-phone text-4xl text-[#00B8D4] bg-white/20 p-4 rounded-full shadow-inner mb-3 transition-all duration-300 hover:bg-[#00B8D4]/30 hover:text-white"></i>
         <h3 class="font-bold text-xl mb-1">Phone</h3>
         <p class="text-gray-200">+63 912 345 6789</p>
       </div>
@@ -34,16 +35,16 @@
       <div
         class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[ -10px_0_15px_#006989 ] p-6 flex flex-col items-center text-center transition-all duration-500 hover:scale-105 hover:shadow-[0_0_25px_#006989]"
       >
-        <i class="fa-solid fa-location-dot text-4xl text-[#006989] mb-3"></i>
+        <i class="fa-solid fa-location-dot text-4xl text-[#00B8D4] bg-white/20 p-4 rounded-full shadow-inner mb-3 transition-all duration-300 hover:bg-[#00B8D4]/30 hover:text-white"></i>
         <h3 class="font-bold text-xl mb-1">Location</h3>
-        <p class="text-gray-200">123 Glass St., Makati City, PH</p>
+        <p class="text-gray-200">Zone-5, Bulan, Sorsogon, PH</p>
       </div>
 
       <!-- Hours -->
       <div
         class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[ -10px_0_15px_#006989 ] p-6 flex flex-col items-center text-center transition-all duration-500 hover:scale-105 hover:shadow-[0_0_25px_#006989]"
       >
-        <i class="fa-solid fa-clock text-4xl text-[#006989] mb-3"></i>
+        <i class="fa-solid fa-clock text-4xl text-[#00B8D4] bg-white/20 p-4 rounded-full shadow-inner mb-3 transition-all duration-300 hover:bg-[#00B8D4]/30 hover:text-white"></i>
         <h3 class="font-bold text-xl mb-1">Working Hours</h3>
         <p class="text-gray-200">Mon–Sat: 8:00 AM – 6:00 PM</p>
       </div>

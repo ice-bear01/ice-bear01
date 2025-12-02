@@ -28,19 +28,37 @@ const product = ref({
 });
 
 // -----------------------------
+// Modal
+// -----------------------------
+const showModal = ref(false);
+const modalTitle = ref("");
+const modalMessage = ref("");
+const modalConfirm = ref(null);
+
+const openModal = (title, message, onConfirm = null) => {
+  modalTitle.value = title;
+  modalMessage.value = message;
+  modalConfirm.value = onConfirm;
+  showModal.value = true;
+};
+
+const closeModal = () => {
+  showModal.value = false;
+};
+
+// -----------------------------
 // Dropdown options
 // -----------------------------
 const categories = ["Doors", "Windows", "Others"];
 const typeMap = {
   Doors: ["Sliding", "Swing", "Folding", "Bifold"],
   Windows: ["Sliding", "Casement", "Awning", "Fixed"],
-  Others: ["Glass Tabletops", "Mirrors", "Shelving", "Display Cases"],
+  Others: ["Glass Tabletops", "Mirrors", "Shelving", "Railing", "Panel", "Frame", "Display Cases", "Others"],
 };
 const typeOptions = ref([]);
 
 watch(() => product.value.category, (newCategory, oldCategory) => {
   typeOptions.value = typeMap[newCategory] || [];
-
   if (oldCategory && oldCategory !== newCategory) {
     product.value.product_type = "";
   }
@@ -70,7 +88,6 @@ onMounted(async () => {
         image_file: null,
       })),
     };
-    // Set type options based on loaded category
     typeOptions.value = typeMap[product.value.category] || [];
   }
 });
@@ -88,28 +105,45 @@ const addGalleryItem = () => product.value.installation_gallery.push({ image_fil
 const removeGalleryItem = (i) => product.value.installation_gallery.splice(i, 1);
 
 // -----------------------------
-// File handling
+// Image File Validations
 // -----------------------------
-const handleProductImage = (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    product.value.product_image_file = file;
-    const reader = new FileReader();
-    reader.onload = (e) => (product.value.product_image = e.target.result);
-    reader.readAsDataURL(file);
-  }
+const isValidImage = (file) => {
+  return file && file.type.startsWith("image/");
 };
 
+// Product Image
+const handleProductImage = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!isValidImage(file)) {
+    openModal("Invalid File", "Only image files (JPG, PNG, WEBP) are allowed.");
+    return;
+  }
+
+  product.value.product_image_file = file;
+  const reader = new FileReader();
+  reader.onload = (e) => (product.value.product_image = e.target.result);
+  reader.readAsDataURL(file);
+};
+
+// Gallery Image
 const handleGalleryImage = (event, index) => {
   const file = event.target.files[0];
-  if (file) {
-    product.value.installation_gallery[index].image_file = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      product.value.installation_gallery[index].image = e.target.result;
-    };
-    reader.readAsDataURL(file);
+  if (!file) return;
+
+  if (!isValidImage(file)) {
+    openModal("Invalid File", "Only image files (JPG, PNG, WEBP) are allowed.");
+    return;
   }
+
+  product.value.installation_gallery[index].image_file = file;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    product.value.installation_gallery[index].image = e.target.result;
+  };
+  reader.readAsDataURL(file);
 };
 
 // -----------------------------
@@ -117,44 +151,51 @@ const handleGalleryImage = (event, index) => {
 // -----------------------------
 const saveProduct = async () => {
   try {
-    if (!product.value.category || !product.value.product_type || !product.value.product_name || !product.value.product_description ||
-      product.value.product_price === null || product.value.product_stock === null) {
-      alert("Please fill in all required fields.");
+    // Required Fields
+    if (!product.value.category || !product.value.product_type || !product.value.product_name ||
+      !product.value.product_description || product.value.product_price === null) {
+      openModal("Missing Required Fields", "Please fill in all required fields.");
       return;
     }
 
+    // ADD MODE – Require Image
+    if (!isEditing.value && !product.value.product_image_file) {
+      openModal("Image Required", "Please upload a product image before submitting.");
+      return;
+    }
+
+    // Price Validation
     const MAX_PRICE = 99999999.99;
     if (product.value.product_price > MAX_PRICE) {
-      alert(`Price cannot exceed ${MAX_PRICE.toLocaleString()}`);
+      openModal("Invalid Price", `Price cannot exceed ${MAX_PRICE.toLocaleString()}.`);
       return;
     }
 
-    if (product.value.product_stock < 0) {
-      alert("Stock cannot be negative");
-      return;
-    }
-
+    // Benefits Validation
     for (const b of product.value.benefits) {
       if (!b.benefit_title || !b.benefit_description) {
-        alert("Please fill in all key benefit fields.");
+        openModal("Missing Benefit Details", "Please complete all key benefit fields.");
         return;
       }
     }
 
+    // Specification Validation
     for (const s of product.value.specification) {
       if (!s.specification_title || !s.specification_description) {
-        alert("Please fill in all specification fields.");
+        openModal("Missing Specification", "Please complete all specification fields.");
         return;
       }
     }
 
+    // Gallery Validation
     for (const g of product.value.installation_gallery) {
       if (!g.image || !g.description) {
-        alert("Please fill in all gallery items.");
+        openModal("Incomplete Gallery", "Please add an image and caption to all gallery items.");
         return;
       }
     }
 
+    // Payload
     const payload = {
       category: product.value.category,
       product_type: product.value.product_type,
@@ -168,23 +209,49 @@ const saveProduct = async () => {
     };
 
     loading.show();
+
     if (isEditing.value) {
       await axios.put(`${backend}/product/update/${productId.value}`, payload);
+      loading.hide();
+      openModal("Success", "Product updated successfully!", () => router.go(-1));
     } else {
       await axios.post(`${backend}/product/add-product`, payload);
+      loading.hide();
+      openModal("Success", "Product added successfully!", () => router.go(-1));
     }
-    loading.hide();
-    alert("Product saved successfully!");
-    router.go(-1);
+
   } catch (err) {
     console.error(err);
-    alert("Error saving product.");
     loading.hide();
+    openModal("Error", "An error occurred while saving the product.");
   }
 };
 </script>
 
 <template>
+  <!-- CUSTOM MODAL -->
+  <div v-if="showModal"
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+    <div class="bg-gray-800 p-6 rounded-xl shadow-xl w-full max-w-md border border-gray-700">
+      <h2 class="text-xl font-bold mb-3 text-white">{{ modalTitle }}</h2>
+      <p class="text-gray-300 mb-6">{{ modalMessage }}</p>
+
+      <div class="flex justify-end gap-3">
+        <button @click="closeModal"
+          class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg">
+          Close
+        </button>
+
+        <button v-if="modalConfirm"
+          @click="modalConfirm(); closeModal()"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN FORM -->
   <div class="p-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white rounded-2xl shadow-xl">
     <h2 class="text-3xl font-bold mb-6 text-center tracking-wide">
       {{ isEditing ? "Update Product" : "Add New Product" }}
@@ -250,7 +317,6 @@ const saveProduct = async () => {
         </div>
       </div>
 
-
       <!-- Key Benefits -->
       <div class="bg-gray-800/60 rounded-xl p-6 shadow-lg border border-gray-700">
         <div class="flex justify-between items-center mb-4">
@@ -300,7 +366,7 @@ const saveProduct = async () => {
         <div class="flex gap-5 overflow-x-auto pb-3">
           <div v-for="(item, index) in product.installation_gallery" :key="'gallery-' + index"
             class="min-w-[200px] border border-gray-700 bg-gray-700/70 p-3 rounded-xl flex flex-col items-center hover:scale-105 transition-transform duration-300 shadow-md">
-            
+
             <div
               class="w-full h-48 flex items-center justify-center border border-gray-600 rounded-lg mb-2 cursor-pointer hover:bg-gray-800"
               @click="$refs['gallery' + index][0].click()">
@@ -317,7 +383,6 @@ const saveProduct = async () => {
         </div>
       </div>
 
-
       <div class="flex justify-end gap-4 pt-4">
         <button type="button" @click="router.go(-1)"
           class="px-5 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 transition font-medium">Cancel</button>
@@ -329,9 +394,3 @@ const saveProduct = async () => {
     </form>
   </div>
 </template>
-
-
-
-
-
-

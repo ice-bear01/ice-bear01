@@ -38,13 +38,13 @@
         <!-- Controls -->
         <button
           @click="prevSlide"
-          class="absolute top-1/2 left-3 -translate-y-1/2 bg-white/60 hover:bg-white text-gray-800 rounded-full p-2 shadow-md"
+          class="cursor-pointer absolute top-1/2 left-3 -translate-y-1/2 bg-white/60 hover:bg-white text-gray-800 rounded-full p-2 shadow-md"
         >
           <i class="fa-solid fa-chevron-left"></i>
         </button>
         <button
           @click="nextSlide"
-          class="absolute top-1/2 right-3 -translate-y-1/2 bg-white/60 hover:bg-white text-gray-800 rounded-full p-2 shadow-md"
+          class="cursor-pointer absolute top-1/2 right-3 -translate-y-1/2 bg-white/60 hover:bg-white text-gray-800 rounded-full p-2 shadow-md"
         >
           <i class="fa-solid fa-chevron-right"></i>
         </button>
@@ -57,7 +57,7 @@
             v-for="(_, index) in slides.length"
             :key="index"
             @click="goToSlide(index)"
-            class="w-3 h-3 rounded-full transition-all duration-300"
+            class="cursor-pointer w-3 h-3 rounded-full transition-all duration-300"
             :class="index === currentSlide ? 'bg-white' : 'bg-gray-400/70'"
           ></button>
         </div>
@@ -80,7 +80,7 @@
           </div>
           <button
             @click="$router.push('/dashboard/doors')"
-            class="mt-6 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold px-6 py-2.5 rounded-full shadow-md flex items-center justify-center gap-2 transition-all duration-200"
+            class="cursor-pointer mt-6 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold px-6 py-2.5 rounded-full shadow-md flex items-center justify-center gap-2 transition-all duration-200"
           >
             <i class="fa-solid fa-arrow-right"></i> SELECT DOORS
           </button>
@@ -99,7 +99,7 @@
           </div>
           <button
             @click="$router.push('/dashboard/windows')"
-            class="mt-6 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold px-6 py-2.5 rounded-full shadow-md flex items-center justify-center gap-2 transition-all duration-200"
+            class="cursor-pointer mt-6 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold px-6 py-2.5 rounded-full shadow-md flex items-center justify-center gap-2 transition-all duration-200"
           >
             <i class="fa-solid fa-arrow-right"></i> SELECT WINDOWS
           </button>
@@ -118,7 +118,7 @@
           </div>
           <button
             @click="$router.push('/dashboard/others')"
-            class="mt-6 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold px-6 py-2.5 rounded-full shadow-md flex items-center justify-center gap-2 transition-all duration-200"
+            class="cursor-pointer mt-6 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold px-6 py-2.5 rounded-full shadow-md flex items-center justify-center gap-2 transition-all duration-200"
           >
             <i class="fa-solid fa-arrow-right"></i> SELECT OTHERS
           </button>
@@ -133,7 +133,6 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import doors from '@/assets/img/door.jpg'
 import windows from '@/assets/img/window.jpg'
 import others from '@/assets/img/other.jpg'
-
 
 const slides = [
   {
@@ -168,7 +167,6 @@ const goToSlide = (index) => {
   currentSlide.value = index
 }
 
-// Auto slide every 5 seconds
 let interval
 onMounted(() => {
   interval = setInterval(nextSlide, 5000)
