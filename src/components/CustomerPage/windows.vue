@@ -33,7 +33,7 @@ function selectType(type: string) {
       <div class="relative w-full sm:w-48">
         <button
           @click="dropdownOpen = !dropdownOpen"
-          class="w-full px-4 py-3 bg-white/20 text-gray-800 rounded-3xl border border-white/30 flex justify-between items-center hover:bg-white/30 transition"
+          class="cursor-pointer w-full px-4 py-3 bg-white/20 text-gray-800 rounded-3xl border border-white/30 flex justify-between items-center hover:bg-white/30 transition"
         >
           <span>{{ selectedType }}</span>
           <svg
@@ -50,7 +50,7 @@ function selectType(type: string) {
         <!-- Dropdown Menu -->
         <div
           v-if="dropdownOpen"
-          class="absolute mt-2 w-full bg-white/80 backdrop-blur-xl border border-sky-100 rounded-2xl overflow-hidden z-50"
+          class="cursor-pointer absolute mt-2 w-full bg-white/80 backdrop-blur-xl border border-sky-100 rounded-2xl overflow-hidden z-50"
         >
           <div
             v-for="type in windowTypes"

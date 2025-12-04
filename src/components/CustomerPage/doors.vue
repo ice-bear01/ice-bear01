@@ -34,7 +34,7 @@ function selectType(type: string) {
       <div class="relative w-full sm:w-48">
         <button
           @click="dropdownOpen = !dropdownOpen"
-          class="w-full px-4 py-3 bg-white/20 text-gray-800 rounded-3xl border border-white/30 flex justify-between items-center hover:bg-white/30 transition"
+          class="cursor-pointer w-full px-4 py-3 bg-white/20 text-gray-800 rounded-3xl border border-white/30 flex justify-between items-center hover:bg-white/30 transition"
         >
           <span>{{ selectedType }}</span>
           <svg
@@ -65,7 +65,7 @@ function selectType(type: string) {
       </div>
 
       <!-- Search Bar -->
-      <div class="w-full sm:w-auto flex-1 sm:flex-initial">
+      <div class="cursor-pointer w-full sm:w-auto flex-1 sm:flex-initial">
         <input
           type="text"
           v-model="searchDoors"

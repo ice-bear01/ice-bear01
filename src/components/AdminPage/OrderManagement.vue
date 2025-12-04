@@ -24,6 +24,7 @@ interface Order {
   status: string;
   delivery_address: DeliveryAddress;
   actionLoading?: boolean;
+  order_note?: string;
 }
 
 interface OrderLog {
@@ -35,6 +36,7 @@ interface OrderLog {
   status: string;
   reject_reason?: string;
   delivery_address: DeliveryAddress;
+  order_note?: string;
 }
 
 // ----------------- State -----------------
@@ -46,6 +48,7 @@ const showLogs = ref(false);
 // ----------------- Modals -----------------
 const showConfirmModal = ref(false);
 const showMessageModal = ref(false);
+const showNote = ref(false);
 const modalMessage = ref("");
 const modalTitle = ref("");
 const confirmAction = ref<null | (() => Promise<void>)>(null);
@@ -127,8 +130,8 @@ const filteredLogs = computed(() => {
 const updatePrice = async (order: Order) => {
   try {
     loading.show();
-    await axios.put(`${backend}/orders/update-price/${order.order_id}`, { 
-      product_price: order.product_price // match backend
+    await axios.put(`${backend}/orders/update-price/${order.order_id}`, {
+      product_price: order.product_price
     });
     openMessageModal(`Order ${order.order_id} price updated`);
     fetchOrderLogs();
@@ -141,15 +144,22 @@ const updatePrice = async (order: Order) => {
 };
 
 
-
+// ----------------- Approve / Finish (REAL ACTION) -----------------
 const approveOrFinishOrder = async (order: Order) => {
   if (["installed/shipped", "rejected"].includes(order.status.toLowerCase())) return;
+
   order.actionLoading = true;
 
   try {
     loading.show();
-    const newStatus = order.status.toLowerCase() === "pending" ? "processing" : "installed/shipped";
-    await axios.put(`${backend}/orders/update-status/${order.order_id}`, { status: newStatus });
+    const newStatus = order.status.toLowerCase() === "pending"
+      ? "processing"
+      : "installed/shipped";
+
+    await axios.put(`${backend}/orders/update-status/${order.order_id}`, {
+      status: newStatus
+    });
+
     order.status = newStatus;
     fetchOrderLogs();
     openMessageModal(`Order ${order.order_id} status updated to "${newStatus}"`);
@@ -162,11 +172,33 @@ const approveOrFinishOrder = async (order: Order) => {
   }
 };
 
-// --------------- DELETE ORDER (NOW WITH MODAL) ----------------
+
+// ----------------- Approve / Finish Confirmation Wrappers -----------------
+const askApproveOrder = (order: Order) => {
+  openConfirmModal(
+    "Approve Order",
+    `Are you sure you want to approve Order #${order.order_id}?`,
+    async () => await approveOrFinishOrder(order)
+    
+  );
+};
+
+
+
+const askFinishOrder = (order: Order) => {
+  openConfirmModal(
+    "Finish Order",
+    `Are you sure you want to mark Order #${order.order_id} as Installed/Shipped?`,
+    async () => await approveOrFinishOrder(order)
+  );
+};
+
+
+
+// --------------- DELETE ORDER ----------------
 const deleteOrder = async (order: Order) => {
   try {
     loading.show();
-
     await axios.delete(`${backend}/orders/${order.order_id}`);
 
     orders.value = orders.value.filter(o => o.order_id !== order.order_id);
@@ -186,9 +218,7 @@ const askDeleteOrder = (order: Order) => {
   openConfirmModal(
     "Delete Order",
     `Are you sure you want to delete Order #${order.order_id}? This action cannot be undone.`,
-    async () => {
-      await deleteOrder(order);
-    }
+    async () => await deleteOrder(order)
   );
 };
 
@@ -202,18 +232,18 @@ const formatAddress = (address: DeliveryAddress) => {
 const toggleLogs = () => {
   showLogs.value = !showLogs.value;
 };
+
+// ----------------- Reject Modal -----------------
 const showRejectModal = ref(false);
 const rejectReason = ref("");
 const currentRejectOrder = ref<Order | null>(null);
 
-// Open reject modal for a specific order
 const openRejectModal = (order: Order) => {
   currentRejectOrder.value = order;
   rejectReason.value = "";
   showRejectModal.value = true;
 };
 
-// Confirm reject with reason
 const confirmRejectOrder = async () => {
   if (!currentRejectOrder.value) return;
 
@@ -230,6 +260,7 @@ const confirmRejectOrder = async () => {
     await axios.put(`${backend}/orders/reject-order/${currentRejectOrder.value.order_id}`, {
       reason: rejectReason.value.trim()
     });
+
     currentRejectOrder.value.status = "rejected";
     openMessageModal(`Order ${currentRejectOrder.value.order_id} has been rejected`);
     fetchOrderLogs();
@@ -243,8 +274,10 @@ const confirmRejectOrder = async () => {
 };
 </script>
 
+
 <template>
   <div class="p-4 bg-gray-900 rounded-xl shadow-lg h-screen overflow-y-auto mb-5">
+
     <!-- Search & Toggle Logs -->
     <div class="flex flex-col sm:flex-row justify-between items-center mb-4 sticky top-0 z-50 py-2 px-2 shadow rounded-lg gap-2">
       <input
@@ -253,6 +286,7 @@ const confirmRejectOrder = async () => {
         placeholder="Search by user email..."
         class="w-full sm:w-1/2 px-3 py-1.5 rounded-md border border-gray-700 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
       />
+
       <button
         @click="toggleLogs"
         class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-md shadow transition hover:scale-105"
@@ -261,7 +295,9 @@ const confirmRejectOrder = async () => {
       </button>
     </div>
 
-    <!-- Orders Table -->
+
+
+    <!-- ====================== ORDERS TABLE ====================== -->
     <div class="overflow-x-hidden" v-if="!showLogs">
       <table class="min-w-full text-gray-200 text-sm border-separate border-spacing-y-1">
         <thead class="bg-[#1f2937] text-gray-100 uppercase">
@@ -272,10 +308,12 @@ const confirmRejectOrder = async () => {
             <th class="py-2 px-2 text-center">Address</th>
             <th class="py-2 px-2 text-center">Price</th>
             <th class="py-2 px-2 text-center">Qty</th>
+            <th class="py-2 px-2 text-center">Note</th>
             <th class="py-2 px-2 text-center">Status</th>
             <th class="py-2 px-2 text-center">Actions</th>
           </tr>
         </thead>
+
         <tbody>
           <tr
             v-for="order in filteredOrders"
@@ -284,10 +322,22 @@ const confirmRejectOrder = async () => {
           >
             <td class="py-1 px-2 text-center">{{ order.order_id }}</td>
             <td class="py-1 px-2 text-center">{{ order.product_id }}</td>
-            <td class="py-1 px-2 text-center truncate max-w-[120px]" :title="order.user_email">{{ order.user_email }}</td>
-            <td class="py-1 px-2 text-center truncate max-w-[160px]" :title="formatAddress(order.delivery_address)">{{ formatAddress(order.delivery_address) }}</td>
+            <td class="py-1 px-2 text-center truncate max-w-[120px]" :title="order.user_email">
+              {{ order.user_email }}
+            </td>
+
+            <td
+              class="py-1 px-2 text-center truncate max-w-[160px]"
+              :title="formatAddress(order.delivery_address)"
+            >
+              {{ formatAddress(order.delivery_address) }}
+            </td>
+
             <td class="py-1 px-2 text-center">
-              <div v-if="order.status.toLowerCase() === 'processing'" class="flex items-center justify-center gap-2">
+              <div
+                v-if="order.status.toLowerCase() === 'processing'"
+                class="flex items-center justify-center gap-2"
+              >
                 <input
                   type="number"
                   v-model.number="order.product_price"
@@ -300,12 +350,28 @@ const confirmRejectOrder = async () => {
                   Save
                 </button>
               </div>
-              <div v-else>
-                ₱{{ order.product_price }}
-              </div>
+
+              <div v-else>₱{{ order.product_price }}</div>
             </td>
 
             <td class="py-1 px-2 text-center">{{ order.quantity }}</td>
+
+
+            <!-- NOTE -->
+            <td class="py-1 px-2 text-center max-w-[100px] relative">
+              <div
+                v-if="order.order_note"
+                class="truncate cursor-pointer text-green-400 underline"
+                @click="modalMessage = order.order_note; showNote = true"
+              >
+                <i class="fas fa-sticky-note mr-1 text-green-400"></i>
+                {{ order.order_note }}
+              </div>
+              <div v-else>-</div>
+            </td>
+
+
+            <!-- STATUS -->
             <td class="py-1 px-2 text-center capitalize font-medium">
               <span
                 :class="{
@@ -319,59 +385,70 @@ const confirmRejectOrder = async () => {
               </span>
             </td>
 
-            <!-- ACTION BUTTONS -->
-<!-- ACTION BUTTONS -->
-<td class="py-1 px-2 text-center">
-  <div class="flex justify-end items-center gap-2">
 
-    <!-- Approve / Finish -->
-    <button
-      v-if="!['installed/shipped','rejected'].includes(order.status.toLowerCase())"
-      @click="approveOrFinishOrder(order)"
-      :disabled="order.actionLoading"
-      class="w-20 h-8 flex items-center justify-center rounded-md font-semibold text-white transition hover:scale-105"
-      :class="order.status.toLowerCase() === 'pending' ? 'bg-blue-600 hover:bg-blue-500' :
-              order.status.toLowerCase() === 'processing' ? 'bg-yellow-600 hover:bg-yellow-500' :
-              'bg-gray-600 cursor-default'">
-      {{
-        order.status.toLowerCase() === 'pending' ? 'Approve' :
-        order.status.toLowerCase() === 'processing' ? 'Finish' :
-        ''
-      }}
-    </button>
+            <!-- ====================== ACTIONS ====================== -->
+            <td class="py-1 px-2 text-center">
+              <div class="flex justify-end items-center gap-2">
 
-<button
-  v-if="!['installed/shipped','rejected'].includes(order.status.toLowerCase())"
-  @click="openRejectModal(order)"
-  :disabled="order.actionLoading"
-  class="w-20 h-8 flex items-center justify-center rounded-md bg-red-600 hover:bg-red-500 text-white font-semibold transition hover:scale-105"
->
-  Reject
-</button>
+                <!-- APPROVE / FINISH WITH CONFIRMATION -->
+                <button
+                  v-if="!['installed/shipped', 'rejected'].includes(order.status.toLowerCase())"
+                  @click="
+                    order.status.toLowerCase() === 'pending'
+                      ? askApproveOrder(order)
+                      : askFinishOrder(order)
+                  "
+                  :disabled="order.actionLoading"
+                  class="w-20 h-8 flex items-center justify-center rounded-md font-semibold text-white transition hover:scale-105"
+                  :class="order.status.toLowerCase() === 'pending'
+                    ? 'bg-blue-600 hover:bg-blue-500'
+                    : 'bg-yellow-600 hover:bg-yellow-500'"
+                >
+                  {{
+                    order.status.toLowerCase() === 'pending'
+                      ? 'Approve'
+                      : 'Finish'
+                  }}
+                </button>
 
 
-    <!-- Delete -->
-    <button
-      @click="askDeleteOrder(order)"
-      :disabled="order.actionLoading"
-      class="w-10 h-8 flex items-center justify-center rounded-md bg-gray-700 hover:bg-gray-600 text-white transition hover:scale-105"
-    >
-      <i class="fa-solid fa-trash"></i>
-    </button>
+                <!-- Reject -->
+                <button
+                  v-if="!['installed/shipped', 'rejected'].includes(order.status.toLowerCase())"
+                  @click="openRejectModal(order)"
+                  :disabled="order.actionLoading"
+                  class="w-20 h-8 flex items-center justify-center rounded-md bg-red-600 hover:bg-red-500 text-white font-semibold transition hover:scale-105"
+                >
+                  Reject
+                </button>
 
-  </div>
-</td>
+
+                <!-- Delete -->
+                <button
+                  @click="askDeleteOrder(order)"
+                  :disabled="order.actionLoading"
+                  class="w-10 h-8 flex items-center justify-center rounded-md bg-gray-700 hover:bg-gray-600 text-white transition hover:scale-105"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+
+              </div>
+            </td>
 
           </tr>
         </tbody>
       </table>
 
+      <!-- Empty -->
       <div v-if="filteredOrders.length === 0" class="text-center py-4 text-gray-400">
         No orders found.
       </div>
     </div>
 
-    <!-- Order Logs -->
+
+
+
+    <!-- ====================== ORDER LOGS ====================== -->
     <div class="overflow-x-hidden" v-else>
       <table class="min-w-full text-gray-200 text-sm border-separate border-spacing-y-1">
         <thead class="bg-[#1f2937] text-gray-100 uppercase">
@@ -382,6 +459,7 @@ const confirmRejectOrder = async () => {
             <th class="py-2 px-2 text-center">Address</th>
             <th class="py-2 px-2 text-center">Price</th>
             <th class="py-2 px-2 text-center">Quantity</th>
+            <th class="py-2 px-2 text-center">Note</th>
             <th class="py-2 px-2 text-center">Status</th>
             <th class="py-2 px-2 text-center">Reject Reason</th>
           </tr>
@@ -395,10 +473,30 @@ const confirmRejectOrder = async () => {
           >
             <td class="py-1 px-2 text-center">{{ log.order_id }}</td>
             <td class="py-1 px-2 text-center">{{ log.product_name }}</td>
-            <td class="py-1 px-2 text-center truncate max-w-[120px]" :title="log.user_email">{{ log.user_email }}</td>
-            <td class="py-1 px-2 text-center truncate max-w-[160px]" :title="formatAddress(log.delivery_address)">{{ formatAddress(log.delivery_address) }}</td>
+            <td class="py-1 px-2 text-center truncate max-w-[120px]" :title="log.user_email">
+              {{ log.user_email }}
+            </td>
+            <td
+              class="py-1 px-2 text-center truncate max-w-[160px]"
+              :title="formatAddress(log.delivery_address)"
+            >
+              {{ formatAddress(log.delivery_address) }}
+            </td>
             <td class="py-1 px-2 text-center">₱{{ log.product_price }}</td>
             <td class="py-1 px-2 text-center">{{ log.quantity }}</td>
+
+            <td class="py-1 px-2 text-center max-w-[100px] relative">
+              <div
+                v-if="log.order_note"
+                class="truncate cursor-pointer text-green-400 underline"
+                @click="modalMessage = log.order_note; showNote = true"
+              >
+                <i class="fas fa-sticky-note mr-1 text-green-400"></i>
+                {{ log.order_note }}
+              </div>
+              <div v-else>-</div>
+            </td>
+
             <td class="py-1 px-2 text-center">{{ log.status }}</td>
             <td class="py-1 px-2 text-center">{{ log.reject_reason || '-' }}</td>
           </tr>
@@ -409,57 +507,95 @@ const confirmRejectOrder = async () => {
         No logs found.
       </div>
     </div>
-    <!-- Reject Reason Modal -->
-<div v-if="showRejectModal" class="fixed inset-0 flex items-center justify-center bg-black/60 z-50 p-4">
-  <div class="bg-gray-800 text-white p-6 rounded-xl w-full max-w-md shadow-lg">
-    <h2 class="text-lg font-bold mb-2">Reject Order #{{ currentRejectOrder?.order_id }}</h2>
-    <p class="text-sm text-gray-300 mb-4">Please provide a reason for rejecting this order:</p>
-    <textarea v-model="rejectReason"
-      placeholder="Enter reason..."
-      rows="4"
-      class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-red-500 focus:outline-none mb-4"></textarea>
 
-    <div class="flex justify-end gap-3">
-      <button @click="showRejectModal = false"
-        class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-md">
-        Cancel
-      </button>
-      <button @click="confirmRejectOrder"
-        class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-md font-semibold">
-        Reject
-      </button>
-    </div>
-  </div>
-</div>
 
-    <!-- Confirm Modal -->
-    <div v-if="showConfirmModal" class="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
-      <div class="bg-gray-800 text-white p-6 rounded-xl w-80 shadow-lg text-center">
-        <h2 class="text-lg font-bold mb-2">{{ modalTitle }}</h2>
-        <p class="text-sm text-gray-300 mb-4">{{ modalMessage }}</p>
-        <div class="flex justify-center gap-3">
+
+    <!-- ====================== REJECT MODAL ====================== -->
+    <div v-if="showRejectModal" class="fixed inset-0 flex items-center justify-center bg-black/60 z-50 p-4">
+      <div class="bg-gray-800 text-white p-6 rounded-xl w-full max-w-md shadow-lg">
+        <h2 class="text-lg font-bold mb-2">Reject Order #{{ currentRejectOrder?.order_id }}</h2>
+        <p class="text-sm text-gray-300 mb-4">Please provide a reason for rejecting this order:</p>
+
+        <textarea
+          v-model="rejectReason"
+          placeholder="Enter reason..."
+          rows="4"
+          class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-red-500 focus:outline-none mb-4"
+        />
+
+        <div class="flex justify-end gap-3">
           <button
-            @click="showConfirmModal = false"
-            class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-md">
+            @click="showRejectModal = false"
+            class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-md"
+          >
             Cancel
           </button>
+
           <button
-            @click="handleConfirm"
+            @click="confirmRejectOrder"
             class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-md font-semibold"
-            :disabled="isConfirming">
-            {{ isConfirming ? 'Processing...' : 'Confirm' }}
+          >
+            Reject
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Message Modal -->
+
+
+    <!-- ====================== CONFIRM MODAL ====================== -->
+    <div v-if="showConfirmModal" class="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+      <div class="bg-gray-800 text-white p-6 rounded-xl w-80 shadow-lg text-center">
+        <h2 class="text-lg font-bold mb-2">{{ modalTitle }}</h2>
+        <p class="text-sm text-gray-300 mb-4">{{ modalMessage }}</p>
+
+        <div class="flex justify-center gap-3">
+          <button
+            @click="showConfirmModal = false"
+            class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-md"
+          >
+            Cancel
+          </button>
+
+          <button
+            @click="handleConfirm"
+            class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-md font-semibold"
+            :disabled="isConfirming"
+          >
+            {{ isConfirming ? "Processing..." : "Confirm" }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- ====================== MESSAGE MODAL ====================== -->
     <div v-if="showMessageModal" class="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
       <div class="bg-gray-800 text-white p-6 rounded-xl w-80 shadow-lg text-center">
         <p class="text-sm mb-4">{{ modalMessage }}</p>
+
         <button
           @click="showMessageModal = false"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-md font-semibold">
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-md font-semibold"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+
+
+
+    <!-- ====================== NOTE MODAL ====================== -->
+    <div v-if="showNote" class="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+      <div class="bg-gray-800 text-white p-6 rounded-xl w-80 shadow-lg text-center flex gap-5 flex-col overflow-hidden">
+        <h3 class="font-bold">Customer Order Note</h3>
+        <p class="text-lg mb-4 text-wrap">{{ modalMessage }}</p>
+
+        <button
+          @click="showNote = false"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-md font-semibold"
+        >
           OK
         </button>
       </div>

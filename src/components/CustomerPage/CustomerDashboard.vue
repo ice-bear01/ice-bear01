@@ -67,43 +67,43 @@ const logout = async () => {
       <!-- Menu Buttons -->
       <div class="flex items-center gap-4 menu-container relative">
         <button @click="$router.push('/dashboard/track-order')"
-          class="font-semibold text-sky-700 hover:text-white hover:bg-sky-600 px-4 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
+          class="cursor-pointer font-semibold text-sky-700 hover:text-white hover:bg-sky-600 px-4 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
           Track Order
         </button>
       
 
         <!-- Dropdown Toggle -->
         <button @click.stop="toggleMenu"
-          class="p-2 rounded-full hover:bg-gray-200 transition flex items-center justify-center">
+          class="cursor-pointer p-2 rounded-full hover:bg-gray-200 transition flex items-center justify-center">
           <i class="fa-solid fa-bars text-2xl text-gray-700"></i>
         </button>
 
         <!-- Dropdown Menu -->
         <transition name="fade">
           <div v-if="showMenu"
-            class="absolute top-14 right-0 w-48 flex bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+            class="cursor-pointer absolute top-14 right-0 w-48 flex bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
             <ul class="flex flex-col w-full">
               <li>
                 <button @click="goToProfile"
-                  class="flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
+                  class="cursor-pointer flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
                   <i class="fa-solid fa-user w-6 flex-shrink-0"></i>
                   <span class="ml-2">Profile</span>
                 </button>
               </li>
               <li>
-                <button @click="goToHome" class="flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
+                <button @click="goToHome" class="cursor-pointer flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
                   <i class="fa-solid fa-home w-6 flex-shrink-0"></i>
                   <span class="ml-2">Home</span>
                 </button>
               </li>
                             <li>
-                <button @click="goToFeedback" class="flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
+                <button @click="goToFeedback" class="cursor-pointer flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
                   <i class="fa-solid fa-message w-6 flex-shrink-0"></i>
                   <span class="ml-2">Feedback</span>
                 </button>
               </li>
               <li>
-                <button @click="logout" class="flex items-center px-4 py-2 hover:bg-red-100 text-red-600 font-medium w-full">
+                <button @click="logout" class="cursor-pointer flex items-center px-4 py-2 hover:bg-red-100 text-red-600 font-medium w-full">
                   <i class="fa-solid fa-right-from-bracket w-6 flex-shrink-0"></i>
                   <span class="ml-2">Logout</span>
                 </button>

@@ -52,7 +52,7 @@ const closeModal = () => {
 const categories = ["Doors", "Windows", "Others"];
 const typeMap = {
   Doors: ["Sliding", "Swing", "Folding", "Bifold"],
-  Windows: ["Sliding", "Casement", "Awning", "Fixed"],
+  Windows: ["Sliding", "Casement", "Awning", "Fixed", "Swing", "Side Opening"],
   Others: ["Glass Tabletops", "Mirrors", "Shelving", "Railing", "Panel", "Frame", "Display Cases", "Others"],
 };
 const typeOptions = ref([]);
@@ -306,7 +306,8 @@ const saveProduct = async () => {
               <img v-if="product.product_image" :src="product.product_image"
                 class="max-h-48 object-contain rounded-md shadow-md" />
             </div>
-            <input ref="productImage" type="file" class="hidden" @change="handleProductImage" />
+            <input ref="productImage" type="file" accept="image/*" class="hidden" @change="handleProductImage" />
+
           </div>
 
           <div>
@@ -374,7 +375,7 @@ const saveProduct = async () => {
               <img v-if="item.image" :src="item.image" class="object-cover h-48 w-full rounded-lg" />
             </div>
 
-            <input type="file" class="hidden" :ref="'gallery' + index" @change="e => handleGalleryImage(e, index)" />
+            <input type="file" accept="image/*" class="hidden" :ref="'gallery' + index" @change="e => handleGalleryImage(e, index)" />
             <input v-model="item.description" placeholder="Caption"
               class="p-2 rounded bg-gray-800 border border-gray-600 w-full text-sm focus:ring-1 focus:ring-blue-400 transition" />
             <button type="button" @click="removeGalleryItem(index)"

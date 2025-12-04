@@ -22,7 +22,8 @@ interface OrderResponse {
   quantity: number;
   total_price: number;
   delivery_address?: DeliveryAddress;
-  reject_reason?: string; // optional reject reason
+  reject_reason?: string;
+  order_note?: string;
 }
 
 interface OrderLogResponse {
@@ -94,18 +95,12 @@ const statusColor = (status: string) => {
     <div v-if="orders.length === 0 && !loading" class="text-white/70">No orders found.</div>
 
     <div class="flex flex-col gap-6 sm:px-15">
-      <div
-        v-for="order in orders"
-        :key="order.order_id"
-        class="flex flex-col md:flex-row gap-4 p-5 rounded-xl shadow-lg group transition relative overflow-hidden bg-white/80"
-      >
+      <div v-for="order in orders" :key="order.order_id"
+        class="flex flex-col md:flex-row gap-4 p-5 rounded-xl shadow-lg group transition relative overflow-hidden bg-white/80">
         <!-- Image -->
         <div class="w-full md:w-64 flex-shrink-0">
-          <img
-            :src="order.product_image"
-            alt="Product"
-            class="w-full h-56 md:h-full object-cover rounded-lg border border-white/20"
-          />
+          <img :src="order.product_image" alt="Product"
+            class="w-full h-56 md:h-full object-cover rounded-lg border border-white/20" />
         </div>
 
         <!-- Details -->
@@ -139,6 +134,10 @@ const statusColor = (status: string) => {
                 (Reason: {{ order.reject_reason }})
               </span>
             </p>
+            <p v-if="order.order_note" class="mt-1 text-gray-700 flex items-center gap-1">
+              <i class="fas fa-sticky-note text-gray-500"></i>
+              <strong>Note:</strong> {{ order.order_note }}
+            </p>
           </div>
 
           <div class="mt-4 p-4 rounded-lg border flex items-start gap-2" style="background-color: #B2EBF2;">
@@ -168,14 +167,19 @@ const statusColor = (status: string) => {
   left: -50%;
   width: 50%;
   height: 100%;
-  background: linear-gradient(120deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
   transform: skewX(-20deg);
   animation: shine 1s forwards;
   pointer-events: none;
 }
 
 @keyframes shine {
-  0% { left: -50%; }
-  100% { left: 150%; }
+  0% {
+    left: -50%;
+  }
+
+  100% {
+    left: 150%;
+  }
 }
 </style>

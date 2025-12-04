@@ -169,10 +169,7 @@ const orderProduct = () => {
               <i class="fas fa-peso-sign text-green-500"></i>
               <span>{{ product?.product_price }}</span>
             </div>
-            <div class="flex items-center gap-2">
-              <i class="fas fa-box text-blue-500"></i>
-              <span>{{ product?.product_stock }} in stock</span>
-            </div>
+            
           </div>
 
           <button

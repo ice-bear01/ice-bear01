@@ -4,6 +4,7 @@ import { useOrderStore } from '@/store/order'
 
 const backend = import.meta.env.VITE_BACKEND_URL
 const orderStore = useOrderStore()
+const orderNote = ref<string>('')
 
 // numeric value for submission
 const quantity = ref<number>(1)
@@ -15,7 +16,6 @@ const errorMessage = ref('')
 const successMessage = ref('')
 const showInfo = ref(false)
 
-// When selectedProduct changes (opening modal for a different product), reset fields.
 watch(
   () => orderStore.selectedProduct,
   () => {
@@ -26,11 +26,6 @@ watch(
   }
 )
 
-/**
- * Called on each input event.
- * Keep it permissive: allow empty string so user can backspace,
- * strip non-digit characters but DO NOT force-clamp here.
- */
 const handleQuantityInput = (ev: Event) => {
   const input = ev.target as HTMLInputElement
   // allow empty
@@ -103,6 +98,7 @@ const confirmOrder = async () => {
   const payload = {
     product_id: orderStore.selectedProduct.product_id,
     quantity: quantity.value,
+    order_note: orderNote.value,
   }
 
   try {
@@ -143,23 +139,15 @@ const closeModal = () => {
 </script>
 
 <template>
-  <div
-    v-if="orderStore.showModal"
-    class="fixed inset-0 bg-black/60 flex items-center justify-center z-60 p-4"
-  >
+  <div v-if="orderStore.showModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-60 p-4">
     <div
-      class="relative bg-white/80 rounded-3xl p-6 w-full max-w-[700px] backdrop-blur-md shadow-lg flex flex-col md:flex-row gap-6 items-center md:items-start overflow-y-auto max-h-[550px] sm:max-h-[450px]"
-    >
+      class="relative bg-white/80 rounded-3xl p-6 w-full max-w-[700px] backdrop-blur-md shadow-lg flex flex-col md:flex-row gap-6 items-center md:items-start overflow-y-auto max-h-[550px] sm:max-h-[450px]">
       <!-- Info icon + tooltip (use mouseover/mouseout for reliability) -->
-      
+
 
       <!-- Product Image -->
       <div class="w-full md:w-1/2 h-56 md:h-64 rounded-2xl overflow-hidden bg-white/5 flex-shrink-0">
-        <img
-          :src="orderStore.selectedProduct?.product_image"
-          alt="Product"
-          class="w-full h-full object-cover"
-        />
+        <img :src="orderStore.selectedProduct?.product_image" alt="Product" class="w-full h-full object-cover" />
       </div>
 
       <!-- Product Details -->
@@ -180,54 +168,44 @@ const closeModal = () => {
           <span class="text-green-500">₱{{ orderStore.selectedProduct?.product_price }}</span>
         </p>
 
-<!-- Red clickable note -->
-<p
-  class="text-red-600 underline cursor-pointer text-sm"
-  @click="showInfo = !showInfo"
->
-  Note: Prices shown are estimated
-</p>
+        <!-- Red clickable note -->
+        <p class="text-red-600 underline cursor-pointer text-sm" @click="showInfo = !showInfo">
+          Note: Prices shown are estimated
+        </p>
 
-<!-- Tooltip popup (reusing showInfo) -->
-<transition name="fade">
-  <div
-    v-if="showInfo"
-    class="bg-white text-black text-sm p-3 rounded-lg shadow-lg border border-gray-300 mt-2 w-full"
-  >
-    <p class="font-semibold text-[#006989] mb-1">Product Info</p>
-    <p class="leading-snug">
-      Prices shown are estimated and based on price per meter.
-      Final cost will depend on the actual measurements taken by our staff during
-      <strong>on-site</strong> assessment.
-    </p>
-  </div>
-</transition>
+        <!-- Tooltip popup (reusing showInfo) -->
+        <transition name="fade">
+          <div v-if="showInfo"
+            class="bg-white text-black text-sm p-3 rounded-lg shadow-lg border border-gray-300 mt-2 w-full">
+            <p class="font-semibold text-[#006989] mb-1">Product Info</p>
+            <p class="leading-snug">
+              Prices shown are estimated and based on price per meter.
+              Final cost will depend on the actual measurements taken by our staff during
+              <strong>on-site</strong> assessment.
+            </p>
+          </div>
+        </transition>
 
         <p class="text-gray-900 text-sm mt-1 truncate-multiline">
           {{ orderStore.selectedProduct?.product_description }}
         </p>
+        <!-- Order Note Input -->
+        <div class="mt-2 flex flex-col gap-1">
+          <label for="order-note" class="text-gray-900 text-sm font-medium">Size/Measurement note:</label>
+          <textarea id="order-note" v-model="orderNote" placeholder="Optional note..." rows="3"
+            class="w-full text-black rounded-md px-2 py-1 border border-gray-900 resize-none focus:outline-none focus:ring-1 focus:ring-[#006989]"></textarea>
+        </div>
 
         <!-- Quantity Input -->
-        <div
-          class="mt-2 flex flex-col sm:flex-row items-center gap-2 justify-center md:justify-start"
-        >
+        <div class="mt-2 flex flex-col sm:flex-row items-center gap-2 justify-center md:justify-start">
           <label for="quantity" class="text-gray-900 flex items-center gap-1">
             <i class="fas fa-sort-numeric-up"></i> Quantity:
           </label>
 
           <!-- v-model allows the user to delete the '1' and type freely -->
-          <input
-            id="quantity"
-            type="text"
-            inputmode="numeric"
-            maxlength="3"
-            v-model="quantityInput"
-            @input="handleQuantityInput"
-            @blur="handleQuantityBlur"
-            class="w-24 text-black rounded-md px-2 py-1"
-            placeholder="1"
-            aria-label="Order quantity"
-          />
+          <input id="quantity" type="text" inputmode="numeric" maxlength="3" v-model="quantityInput"
+            @input="handleQuantityInput" @blur="handleQuantityBlur" class="w-24 text-black rounded-md px-2 py-1"
+            placeholder="1" aria-label="Order quantity" />
         </div>
 
         <!-- Feedback -->
@@ -240,19 +218,13 @@ const closeModal = () => {
 
         <!-- Buttons -->
         <div class="flex flex-col sm:flex-row gap-3 mt-4">
-          <button
-            @click="confirmOrder"
-            :disabled="loading"
-            class="flex-1 px-4 py-2 bg-green-500/30 border border-white/30 rounded-3xl hover:bg-green-600 transition flex items-center justify-center gap-2"
-          >
+          <button @click="confirmOrder" :disabled="loading"
+            class="flex-1 px-4 py-2 bg-green-500/30 border border-white/30 rounded-3xl hover:bg-green-600 transition flex items-center justify-center gap-2">
             <i class="fas fa-check"></i>
             {{ loading ? 'Processing...' : 'Confirm' }}
           </button>
-          <button
-            @click="closeModal"
-            :disabled="loading"
-            class="flex-1 px-4 py-2 bg-red-500/30 border border-white/30 rounded-3xl hover:bg-red-600 transition flex items-center justify-center gap-2"
-          >
+          <button @click="closeModal" :disabled="loading"
+            class="flex-1 px-4 py-2 bg-red-500/30 border border-white/30 rounded-3xl hover:bg-red-600 transition flex items-center justify-center gap-2">
             <i class="fas fa-times"></i> Cancel
           </button>
         </div>
@@ -266,6 +238,7 @@ const closeModal = () => {
 .fade-leave-active {
   transition: opacity 0.18s ease;
 }
+
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
