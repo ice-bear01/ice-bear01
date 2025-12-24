@@ -78,12 +78,22 @@ const handleConfirm = async () => {
 const fetchOrders = async () => {
   try {
     const res = await axios.get<Order[]>(`${backend}/orders/order-admin`);
-    orders.value = res.data.map(order => ({ ...order, actionLoading: false }));
+    orders.value = res.data.map(order => ({
+      ...order,
+      actionLoading: false,
+
+      // 🔥 NEW FIELDSsssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+      originalPrice: order.product_price,
+      isEditingPrice: false,
+      hasUnsavedChanges: false,
+      priceSaved: false
+    }));
   } catch (err) {
     console.error(err);
     openMessageModal("Failed to fetch orders.");
   }
 };
+
 
 // ----------------- Fetch Order Logs -----------------
 const fetchOrderLogs = async () => {
@@ -272,6 +282,7 @@ const confirmRejectOrder = async () => {
     loading.hide();
   }
 };
+
 </script>
 
 

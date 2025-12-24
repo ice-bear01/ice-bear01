@@ -52,6 +52,15 @@ interface Product {
 
 const product = ref<ProductDetail | null>(null)
 
+// Lightbox
+const lightboxImage = ref<string | null>(null)
+const openLightbox = (img: string) => {
+  lightboxImage.value = img
+}
+const closeLightbox = () => {
+  lightboxImage.value = null
+}
+
 onMounted(async () => {
   try {
     const { data } = await axios.get(`${backend}/product/${product_id}`)
@@ -197,6 +206,7 @@ const orderProduct = () => {
         v-for="img in product.installation_gallery"
         :key="img.image"
         class="rounded-3xl overflow-hidden relative cursor-pointer group bg-white/80 backdrop-blur-md border border-gray-500/70 hover:scale-[1.02] transition-transform p-2 max-w-[300px]"
+        @click="openLightbox(img.image)"
       >
         <!-- Image -->
         <div class="h-56 sm:h-64 w-full relative rounded-t-3xl overflow-hidden">
@@ -212,6 +222,18 @@ const orderProduct = () => {
           <p class="text-sm sm:text-base">{{ img.description }}</p>
         </div>
       </div>
+    </div>
+
+    <!-- 🔹 Lightbox Modal -->
+    <div
+      v-if="lightboxImage"
+      @click.self="closeLightbox"
+      class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 cursor-pointer"
+    >
+      <img
+        :src="lightboxImage"
+        class="max-h-[90%] max-w-[90%] rounded-2xl shadow-lg"
+      />
     </div>
 
   </div>

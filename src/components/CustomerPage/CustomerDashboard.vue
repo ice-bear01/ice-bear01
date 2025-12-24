@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed } from "vue";
+import { useRoute } from "vue-router";
 import logo from "@/assets/img/logo.jpg";
 import OrderConfirmationModal from "../modal/OrderConfirmationModal.vue";
 import { useOrderStore } from "@/store/order";
@@ -7,7 +8,18 @@ import router from "@/router";
 import axios from "axios";
 
 const orderStore = useOrderStore();
-const backend = import.meta.env.VITE_BACKEND_URL
+const backend = import.meta.env.VITE_BACKEND_URL;
+
+// --- Hide Back Button Logic ---
+const route = useRoute();
+
+const hideBackButton = computed(() => {
+  return (
+    route.path === "/dashboard/home" ||
+    route.path === "/dashboard/select-category"
+  );
+});
+
 // state to toggle dropdown visibility
 const showMenu = ref(false);
 
@@ -57,53 +69,79 @@ const logout = async () => {
 
     <!-- Navbar -->
     <nav
-      class="h-20 w-full flex justify-between items-center px-6 bg-gradient-to-r from-sky-100 to-white shadow-lg sticky top-0 z-50 rounded-b-2xl border-b border-sky-200">
+      class="h-20 w-full flex justify-between items-center px-6 bg-gradient-to-r from-sky-100 to-white shadow-lg sticky top-0 z-50 rounded-b-2xl border-b border-sky-200"
+    >
       <!-- Logo & Name -->
-      <div class="flex items-center gap-3 cursor-pointer" @click="$router.push('/dashboard/home')">
-        <img :src="logo" alt="Logo" class="h-14 w-14 rounded-xl shadow-sm object-cover" />
-        <h1 class="font-bold sm:text-2xl text-sky-800 underline">3J's Glass & Aluminum Supply</h1>
+      <div
+        class="flex items-center gap-3 cursor-pointer"
+        @click="$router.push('/dashboard/home')"
+      >
+        <img
+          :src="logo"
+          alt="Logo"
+          class="h-14 w-14 rounded-xl shadow-sm object-cover"
+        />
+        <h1 class="font-bold sm:text-2xl text-sky-800">
+          3J's Glass & Aluminum Supply
+        </h1>
       </div>
 
       <!-- Menu Buttons -->
       <div class="flex items-center gap-4 menu-container relative">
-        <button @click="$router.push('/dashboard/track-order')"
-          class="cursor-pointer font-semibold text-sky-700 hover:text-white hover:bg-sky-600 px-4 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
+        <button
+          @click="$router.push('/dashboard/track-order')"
+          class="cursor-pointer font-semibold text-sky-700 hover:text-white hover:bg-sky-600 px-4 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+        >
           Track Order
         </button>
-      
 
         <!-- Dropdown Toggle -->
-        <button @click.stop="toggleMenu"
-          class="cursor-pointer p-2 rounded-full hover:bg-gray-200 transition flex items-center justify-center">
+        <button
+          @click.stop="toggleMenu"
+          class="cursor-pointer p-2 rounded-full hover:bg-gray-200 transition flex items-center justify-center"
+        >
           <i class="fa-solid fa-bars text-2xl text-gray-700"></i>
         </button>
 
         <!-- Dropdown Menu -->
         <transition name="fade">
-          <div v-if="showMenu"
-            class="cursor-pointer absolute top-14 right-0 w-48 flex bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+          <div
+            v-if="showMenu"
+            class="cursor-pointer absolute top-14 right-0 w-48 flex bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden"
+          >
             <ul class="flex flex-col w-full">
               <li>
-                <button @click="goToProfile"
-                  class="cursor-pointer flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
+                <button
+                  @click="goToProfile"
+                  class="cursor-pointer flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full"
+                >
                   <i class="fa-solid fa-user w-6 flex-shrink-0"></i>
                   <span class="ml-2">Profile</span>
                 </button>
               </li>
               <li>
-                <button @click="goToHome" class="cursor-pointer flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
+                <button
+                  @click="goToHome"
+                  class="cursor-pointer flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full"
+                >
                   <i class="fa-solid fa-home w-6 flex-shrink-0"></i>
                   <span class="ml-2">Home</span>
                 </button>
               </li>
-                            <li>
-                <button @click="goToFeedback" class="cursor-pointer flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full">
+              <li>
+                <button
+                  @click="goToFeedback"
+                  class="cursor-pointer flex items-center px-4 py-2 hover:bg-sky-50 text-gray-800 font-medium w-full"
+                >
                   <i class="fa-solid fa-message w-6 flex-shrink-0"></i>
                   <span class="ml-2">Feedback</span>
                 </button>
               </li>
               <li>
-                <button @click="logout" class="cursor-pointer flex items-center px-4 py-2 hover:bg-red-100 text-red-600 font-medium w-full">
+                <button
+                  @click="logout"
+                  class="cursor-pointer flex items-center px-4 py-2 hover:bg-red-100 text-red-600 font-medium w-full"
+                >
                   <i class="fa-solid fa-right-from-bracket w-6 flex-shrink-0"></i>
                   <span class="ml-2">Logout</span>
                 </button>
@@ -111,9 +149,17 @@ const logout = async () => {
             </ul>
           </div>
         </transition>
-
       </div>
     </nav>
+
+    <!-- Floating Back Button -->
+    <button
+      v-if="!hideBackButton"
+      @click="$router.back()"
+      class="fixed top-24 left-4 z-50 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition"
+    >
+      ← Back
+    </button>
 
     <!-- Router Content -->
     <div class="flex-1 p-4 sm:p-8">

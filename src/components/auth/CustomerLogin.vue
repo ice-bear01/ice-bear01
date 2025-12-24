@@ -111,6 +111,7 @@ const changePassword = async () => {
     <div
       class="backdrop-blur-lg bg-white/20 border border-white/30 rounded-2xl shadow-2xl p-8 sm:p-10 w-full max-w-md text-white relative"
     >
+    
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold tracking-wide">Welcome Back</h1>
         <p class="text-gray-200 text-sm mt-2">Log in to continue managing your account</p>

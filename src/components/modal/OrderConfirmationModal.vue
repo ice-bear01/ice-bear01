@@ -203,9 +203,21 @@ const closeModal = () => {
           </label>
 
           <!-- v-model allows the user to delete the '1' and type freely -->
-          <input id="quantity" type="text" inputmode="numeric" maxlength="3" v-model="quantityInput"
-            @input="handleQuantityInput" @blur="handleQuantityBlur" class="w-24 text-black rounded-md px-2 py-1"
-            placeholder="1" aria-label="Order quantity" />
+          <input
+  id="quantity"
+  type="text"
+  inputmode="numeric"
+  maxlength="3"
+  v-model="quantityInput"
+  @input="handleQuantityInput"
+  @blur="handleQuantityBlur"
+  class="w-24 text-black rounded-md px-2 py-1 
+         border border-gray-400 bg-white 
+         focus:border-blue-500 focus:ring-2 focus:ring-blue-300"
+  placeholder="1"
+  aria-label="Order quantity"
+/>
+
         </div>
 
         <!-- Feedback -->
